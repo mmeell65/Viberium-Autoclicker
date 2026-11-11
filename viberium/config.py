@@ -12,7 +12,7 @@ from typing import Any
 APP_NAME = "Viberium"
 APP_VERSION = "1.0.0"
 APP_TAGLINE = "Modern auto clicker for Windows"
-GITHUB_URL = "https://github.com/"
+GITHUB_URL = "https://github.com/mmeell65/Viberium-Autoclicker"
 
 DEFAULTS: dict[str, Any] = {
     "language": "ru",
