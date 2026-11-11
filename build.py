@@ -13,8 +13,11 @@ ROOT = Path(__file__).resolve().parent
 ICON = ROOT / "viberium" / "ui" / "viberium.ico"
 
 # Генерируем иконку приложения
+from PySide6.QtGui import QGuiApplication  # noqa: E402
+
 from viberium.ui.appicon import save_ico  # noqa: E402
 
+qt_app = QGuiApplication([])  # QPixmap requires a Qt application instance
 save_ico(str(ICON))
 
 cmd = [
@@ -33,6 +36,7 @@ cmd = [
     "--hidden-import=viberium.core.hotkeys",
     "--hidden-import=viberium.core.macros",
     "--clean",
+    "--noconfirm",
     "--log-level=INFO",
     str(ROOT / "main.py"),
 ]
