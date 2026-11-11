@@ -123,7 +123,7 @@ No installation needed. Settings live in `%APPDATA%\Viberium`.
 
 ```bash
 # 1. Dependencies
-pip install PySide6
+pip install -r requirements.txt
 
 # 2. Run from source
 python main.py

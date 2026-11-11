@@ -123,7 +123,7 @@ Viberium — нативный для Windows автокликер, написа�
 
 ```bash
 # 1. Зависимости
-pip install PySide6
+pip install -r requirements.txt
 
 # 2. Запуск из исходников
 python main.py
