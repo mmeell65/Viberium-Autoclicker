@@ -22,7 +22,7 @@
 
 ---
 
-## About
+## Windows auto clicker
 
 Viberium is a Windows auto clicker with a fully custom interface. It works with system input directly, so clicks and key presses are precise and smooth — no browser delays or extra layers in between.
 
