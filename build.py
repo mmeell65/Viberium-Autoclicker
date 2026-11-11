@@ -9,6 +9,12 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 ROOT = Path(__file__).resolve().parent
 ICON = ROOT / "viberium" / "ui" / "viberium.ico"
 
@@ -43,4 +49,4 @@ cmd = [
 
 print(">>>", " ".join(cmd))
 subprocess.run(cmd, check=True)
-print(f"\nГотово: {ROOT / 'dist' / 'Viberium' / 'Viberium.exe'}")
+print(f"\nDone: {ROOT / 'dist' / 'Viberium' / 'Viberium.exe'}")
