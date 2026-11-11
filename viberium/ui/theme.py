@@ -300,6 +300,9 @@ QLabel#CardSubtitle, QLabel#Hint {{
     font-size: 8.5pt;
     color: {t['MUTED']};
 }}
+QLabel#LinkLabel {{
+    font-size: 8.5pt;
+}}
 QLabel#FieldLabel {{
     font-size: 9.5pt;
     color: {t['DIM']};

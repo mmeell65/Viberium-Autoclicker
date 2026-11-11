@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QGridLayout,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QApplication,
@@ -17,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...config import APP_VERSION, GITHUB_URL
+from ...config import APP_VERSION, GITHUB_URL, LICENSE_URL
 from ...i18n import tr
 from ...utils import is_autostart_enabled, set_autostart
 from .. import icons
@@ -194,7 +195,16 @@ class SettingsPage(BasePage):
         github.setIcon(icons.icon("globe", DIM, 15))
         github.clicked.connect(lambda: webbrowser.open(GITHUB_URL))
         link_row.addWidget(github)
-        link_row.addWidget(label(tr("settings.license"), "Hint"))
+
+        license_link = QLabel(
+            f'<a href="{LICENSE_URL}" style="color:{ACCENT}; text-decoration:none;">'
+            f'{tr("settings.license")}</a>'
+        )
+        license_link.setObjectName("LinkLabel")
+        license_link.setTextFormat(Qt.TextFormat.RichText)
+        license_link.setOpenExternalLinks(True)
+        license_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        link_row.addWidget(license_link)
         link_row.addStretch(1)
         card.add(links)
         return card
