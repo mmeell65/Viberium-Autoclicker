@@ -10,7 +10,9 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](#build)
 [![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?logo=qt&logoColor=white)](#stack)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5b8cff.svg)](LICENSE)
+[![Build](https://github.com/mmeell65/Viberium/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/mmeell65/Viberium?color=5b8cff&label=release)](../../releases)
+[![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
 
 [Скачать](#download) · [Возможности](#features) · [Скриншоты](#screenshots) · [Горячие клавиши](#hotkeys) · [Сборка](#build) · [English](README.en.md)
 
