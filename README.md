@@ -6,15 +6,15 @@
 
 **Современный автокликер для Windows: тонкая настройка, макросы, горячие клавиши и две темы оформления.**
 
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)](#requirements)
-[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](#build)
-[![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?logo=qt&logoColor=white)](#stack)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)](#системные-требования)
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](#сборка-из-исходников)
+[![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?logo=qt&logoColor=white)](#технологии)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5b8cff.svg)](LICENSE)
 [![Build](https://github.com/mmeell65/Viberium/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/mmeell65/Viberium?color=5b8cff&label=release)](../../releases)
 [![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
 
-[Скачать](#download) · [Возможности](#features) · [Скриншоты](#screenshots) · [Горячие клавиши](#hotkeys) · [Сборка](#build) · [English](README.en.md)
+[Скачать](#скачать) · [Возможности](#возможности) · [Скриншоты](#скриншоты) · [Горячие клавиши](#горячие-клавиши) · [Сборка](#сборка-из-исходников) · [English](README.en.md)
 
 </div>
 
@@ -22,14 +22,12 @@
 
 ---
 
-<a id="about"></a>
 ## О проекте
 
 Viberium — нативный для Windows автокликер, написанный на Python + PySide6. Он не эмулирует «клики через браузер», а работает с Win32 API напрямую: низкоуровневые хуки, `SendInput`, точные интервалы. Интерфейс полностью кастомный, без системных рамок, с тёмной и светлой темами.
 
 Проект задуман как инструмент для **своих задач на своих устройствах**: рутинные клики, тестирование интерфейсов, повторяющиеся действия в программах. Пожалуйста, не используйте его для нарушения правил игр и сервисов.
 
-<a id="features"></a>
 ## Возможности
 
 <table>
@@ -87,7 +85,6 @@ Viberium — нативный для Windows автокликер, написа�
 </tr>
 </table>
 
-<a id="screenshots"></a>
 ## Скриншоты
 
 | Тёмная тема | Светлая тема |
@@ -96,7 +93,6 @@ Viberium — нативный для Windows автокликер, написа�
 | ![Макросы — тёмная](docs/screenshots/macros-dark.png) | ![Макросы — светлая](docs/screenshots/macros-light.png) |
 | ![Настройки — тёмная](docs/screenshots/settings-dark.png) | ![Настройки — светлая](docs/screenshots/settings-light.png) |
 
-<a id="download"></a>
 ## Скачать
 
 Готовые сборки лежат в разделе **[Releases](../../releases)**.
@@ -111,7 +107,6 @@ Viberium — нативный для Windows автокликер, написа�
 
 > **SmartScreen.** При первом запуске Windows может показать предупреждение о неизвестном издателе — это нормально для неподписанных приложений. Нажмите «Подробнее» → «Выполнить в любом случае». Сборка не подписана сертификатом, поэтому антивирусы могут реагировать на глобальные хуки ввода.
 
-<a id="requirements"></a>
 ## Системные требования
 
 | | |
@@ -120,7 +115,6 @@ Viberium — нативный для Windows автокликер, написа�
 | Для готовой сборки | ничего дополнительно |
 | Для запуска из исходников | Python 3.10+ и PySide6 |
 
-<a id="build"></a>
 ## Сборка из исходников
 
 ```bash
@@ -148,7 +142,6 @@ python tools/selftest.py
 
 Проверяет конфиг, миграции, профили, движок, хуки, макросы и форматирование горячих клавиш.
 
-<a id="hotkeys"></a>
 ## Горячие клавиши
 
 По умолчанию назначен только экстренный стоп — остальные комбинации вы выбираете сами.
@@ -167,7 +160,6 @@ python tools/selftest.py
 - Поддерживаются Ctrl, Alt, Shift, Win и боковые кнопки мыши X1/X2.
 - Повторное нажатие на поле захвата отменяет запись и очищает комбинацию; кнопка **×** делает то же самое.
 
-<a id="structure"></a>
 ## Структура проекта
 
 ```text
@@ -197,7 +189,6 @@ Viberium/
 └── docs/screenshots/       # изображения для README
 ```
 
-<a id="stack"></a>
 ## Технологии
 
 - **Python 3.10+**
@@ -207,7 +198,6 @@ Viberium/
 
 Все иконки и элементы рисуются кодом — в проекте нет бинарных ассетов.
 
-<a id="contributing"></a>
 ## Участие в разработке
 
 Идеи, баги и предложения — в [Issues](../../issues). Перед pull request запустите:
@@ -217,12 +207,10 @@ python -m compileall -q viberium main.py tools/selftest.py
 python tools/selftest.py
 ```
 
-<a id="license"></a>
 ## Лицензия
 
 [MIT](LICENSE) © 2026 Viberium
 
-<a id="disclaimer"></a>
 ## Предостережение
 
 Программа предназначена для автоматизации своих задач на своих устройствах. Не используйте её для нарушения правил игр, сервисов или законодательства.
