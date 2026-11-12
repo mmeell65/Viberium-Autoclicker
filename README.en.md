@@ -6,22 +6,38 @@
 
 **A modern Windows auto clicker: fine-grained tuning, macros, hotkeys and two themes.**
 
+[![Website](https://img.shields.io/badge/🌐_site-mmeell65.github.io-5b8cff?style=flat-square)](https://mmeell65.github.io/Viberium-Autoclicker/)
+[![Release](https://img.shields.io/github/v/release/mmeell65/Viberium-Autoclicker?color=5b8cff&label=release)](../../releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/mmeell65/Viberium-Autoclicker/total?color=5b8cff&label=downloads)](../../releases/latest)
+[![Stars](https://img.shields.io/github/stars/mmeell65/Viberium-Autoclicker?color=5b8cff&label=stars)](../../stargazers)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)](#requirements)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?logo=qt&logoColor=white)](https://doc.qt.io/qtforpython/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5b8cff.svg)](LICENSE)
 [![Build](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/mmeell65/Viberium-Autoclicker?color=5b8cff&label=release)](../../releases)
-[![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
 [![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?logo=telegram&logoColor=white)](https://t.me/viberium_autoclicker)
 
-[Download](#download) · [Features](#features) · [Screenshots](#screenshots) · [Telegram](#telegram) · [Русский](README.md)
+[![⬇ Download for Windows](https://img.shields.io/badge/%E2%9%93%EF%B8%8F_Download-Windows-5b8cff?style=for-the-badge&logo=windows&logoColor=white)](../../releases/latest/download/Viberium-windows.zip)
+[![🌐 Project website](https://img.shields.io/badge/🌐_website-1f2a44?style=for-the-badge)](https://mmeell65.github.io/Viberium-Autoclicker/)
+[![💬 Telegram channel](https://img.shields.io/badge/💬_Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/viberium_autoclicker)
+
+[Download](#download) · [What's new](#whats-new-in-110) · [Features](#features) · [Screenshots](#screenshots) · [Website](https://mmeell65.github.io/Viberium-Autoclicker/) · [Telegram](#telegram) · [Русский](README.md)
 
 </div>
 
 ![Viberium — mouse auto clicker, dark theme](docs/screenshots/mouse-dark.png)
 
 ---
+
+## What's new in 1.1.0
+
+- **Keyboard auto clicker**: several keys and combinations at once, "Simultaneous" and "Sequential" press modes with a pause between presses.
+- **Combination capture** with Ctrl, Shift, Alt and Win — left and right modifiers are recognised correctly.
+- **Reorder keys** with the arrow buttons and remove rows you don't need.
+- **Project website**: [mmeell65.github.io/Viberium-Autoclicker](https://mmeell65.github.io/Viberium-Autoclicker/) — overview, screenshots and FAQ.
+- **Telegram channel** linked right inside the app.
+
+[Full changelog](CHANGELOG.md) · [Download 1.1.0](../../releases/latest)
 
 ## Windows auto clicker
 
@@ -107,6 +123,9 @@ It is meant for **your own tasks on your own devices**: repetitive clicking, UI 
 
 Grab the latest build from **[Releases](../../releases)**.
 
+**Direct link to the latest build:**
+[`Viberium-windows.zip`](../../releases/latest/download/Viberium-windows.zip) · [release page](../../releases/latest) · [project website](https://mmeell65.github.io/Viberium-Autoclicker/)
+
 1. Download `Viberium-windows.zip`.
 2. Extract the **whole** archive into any folder.
 3. Run `Viberium.exe`.
@@ -132,6 +151,16 @@ Only the emergency stop is bound by default — **F8**. Everything else is up to
 - Bindings are global, even when the window is minimized to tray.
 - Ctrl, Alt, Shift, Win and mouse side buttons X1/X2 are supported.
 - Clicking a capture field again cancels recording and clears the binding; the **×** button does the same.
+
+## Where to find Viberium
+
+| | |
+|---|---|
+| 🌐 Project website | [mmeell65.github.io/Viberium-Autoclicker](https://mmeell65.github.io/Viberium-Autoclicker/) |
+| ⬇ Releases | [GitHub Releases](../../releases/latest) |
+| 💬 Telegram channel | [@viberium_autoclicker](https://t.me/viberium_autoclicker) |
+| 🗂 Software directory | [AlternativeTo](https://alternativeto.net/software/viberium/) |
+| 🐛 Bug reports | [Issues](../../issues) |
 
 ## License
 
