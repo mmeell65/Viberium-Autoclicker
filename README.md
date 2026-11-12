@@ -156,7 +156,7 @@ Viberium — автокликер для Windows с полностью каст�
 
 | | |
 |---|---|
-| 🌐 Сайт проекта | [mmeell65.github.io/Viberium-Autoclicker](https://mmeell65.github.io/Viberium-Autoclicker/) |
+| 🌐 Сайт проекта | [mmeell65.github.io/Viberium-Autoclicker](https://mmeell65.github.io/Viberium-Autoclicker/) · [на русском](https://mmeell65.github.io/Viberium-Autoclicker/ru/) |
 | ⬇ Релизы | [GitHub Releases](../../releases/latest) |
 | 💬 Telegram-канал | [@viberium_autoclicker](https://t.me/viberium_autoclicker) |
 | 🗂 Каталог софта | [AlternativeTo](https://alternativeto.net/software/viberium/) |

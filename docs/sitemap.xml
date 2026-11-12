@@ -6,5 +6,17 @@
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mmeell65.github.io/Viberium-Autoclicker/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://mmeell65.github.io/Viberium-Autoclicker/ru/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://mmeell65.github.io/Viberium-Autoclicker/"/>
+  </url>
+  <url>
+    <loc>https://mmeell65.github.io/Viberium-Autoclicker/ru/</loc>
+    <lastmod>2026-11-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://mmeell65.github.io/Viberium-Autoclicker/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://mmeell65.github.io/Viberium-Autoclicker/ru/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://mmeell65.github.io/Viberium-Autoclicker/"/>
   </url>
 </urlset>

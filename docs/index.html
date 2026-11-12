@@ -1,28 +1,33 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Viberium — автокликер для Windows: мышь, клавиатура, макросы</title>
-<meta name="description" content="Бесплатный автокликер для Windows: кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне. Скачать бесплатно.">
-<meta name="keywords" content="автокликер, автокликер для Windows, кликер мыши, кликер клавиатуры, макросы, автоматизация, Viberium">
+<title>Viberium — Auto Clicker for Windows: Mouse, Keyboard, Macros</title>
+<meta name="description" content="Free open-source auto clicker for Windows: mouse and keyboard auto clickers, key combinations, macros, global hotkeys and target-window mode. Download for free.">
+<meta name="keywords" content="auto clicker, auto clicker for Windows, mouse clicker, keyboard auto clicker, macros, automation, hotkeys, Viberium">
 <meta name="google-site-verification" content="mKG0Qt7h9dJ2q3K7zqEN88KD0hmQfC6yD7RO92fe5io" />
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#080b12">
 <link rel="canonical" href="https://mmeell65.github.io/Viberium-Autoclicker/">
+<link rel="alternate" hreflang="en" href="https://mmeell65.github.io/Viberium-Autoclicker/">
+<link rel="alternate" hreflang="ru" href="https://mmeell65.github.io/Viberium-Autoclicker/ru/">
+<link rel="alternate" hreflang="x-default" href="https://mmeell65.github.io/Viberium-Autoclicker/">
 <link rel="icon" href="screenshots/icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://mmeell65.github.io/Viberium-Autoclicker/">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
 <meta property="og:site_name" content="Viberium">
-<meta property="og:title" content="Viberium — автокликер для Windows">
-<meta property="og:description" content="Кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне.">
-<meta property="og:image" content="https://mmeell65.github.io/Viberium-Autoclicker/screenshots/keyboard-dark.png">
+<meta property="og:title" content="Viberium — Auto Clicker for Windows">
+<meta property="og:description" content="Mouse and keyboard auto clickers, key combinations, macros, global hotkeys and target-window mode.">
+<meta property="og:image" content="https://mmeell65.github.io/Viberium-Autoclicker/screenshots/en/keyboard-dark.png">
 <meta property="og:image:width" content="1425">
 <meta property="og:image:height" content="975">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Viberium — автокликер для Windows">
-<meta name="twitter:description" content="Кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне.">
-<meta name="twitter:image" content="https://mmeell65.github.io/Viberium-Autoclicker/screenshots/keyboard-dark.png">
+<meta name="twitter:title" content="Viberium — Auto Clicker for Windows">
+<meta name="twitter:description" content="Mouse and keyboard auto clickers, key combinations, macros, global hotkeys and target-window mode.">
+<meta name="twitter:image" content="https://mmeell65.github.io/Viberium-Autoclicker/screenshots/en/keyboard-dark.png">
 <style>
   :root{
     --bg:#080b12; --bg2:#0b1222; --card:#0e1526; --card2:#111b33;
@@ -58,9 +63,12 @@
   .nav-links{margin-left:auto; display:flex; gap:20px; align-items:center}
   .nav-links a{color:var(--muted); font-size:14px}
   .nav-links a:hover{color:var(--text); text-decoration:none}
-  @media (max-width:720px){ .nav-links{display:none} }
+  .lang-switch{display:flex; gap:6px; font-size:13px}
+  .lang-switch a{padding:3px 9px; border:1px solid var(--border2); border-radius:999px; color:var(--muted)}
+  .lang-switch a.active{color:var(--text); border-color:var(--accent); background:rgba(91,140,255,.12)}
+  @media (max-width:820px){ .nav-links{display:none} }
 
-  .hero{padding:72px 0 40px; display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center}
+  .hero{padding:72px 0 40px; display:grid; grid-columns:1.05fr .95fr; gap:44px; align-items:center}
   @media (max-width:900px){ .hero{grid-template-columns:1fr; padding-top:48px} }
   .badge{
     display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--accent2);
@@ -104,7 +112,7 @@
     border:1px solid var(--border); border-radius:var(--radius); padding:22px;
     transition:.18s;
   }
-  .card:hover{border-color:rgba(91,140,255,.45); transform:translateY(-2px)}
+  .card:hover{border-color:var(--accent); transform:translateY(-2px)}
   .card .ico{font-size:22px; margin-bottom:10px; display:block}
   .card h3{margin:0 0 6px; font-size:16px}
   .card p{margin:0; color:var(--muted); font-size:14px}
@@ -155,12 +163,16 @@
       <span>Viberium</span>
     </a>
     <nav class="nav-links">
-      <a href="#features">Возможности</a>
-      <a href="#screens">Скриншоты</a>
-      <a href="#install">Установка</a>
-      <a href="#faq">Вопросы</a>
+      <a href="#features">Features</a>
+      <a href="#screens">Screenshots</a>
+      <a href="#install">Download</a>
+      <a href="#faq">FAQ</a>
       <a href="https://t.me/viberium_autoclicker">Telegram</a>
       <a href="https://github.com/mmeell65/Viberium-Autoclicker">GitHub</a>
+      <span class="lang-switch">
+        <a class="active" href="https://mmeell65.github.io/Viberium-Autoclicker/" hreflang="en">EN</a>
+        <a href="https://mmeell65.github.io/Viberium-Autoclicker/ru/" hreflang="ru">RU</a>
+      </span>
     </nav>
   </div>
 </header>
@@ -168,107 +180,107 @@
 <main id="top">
   <div class="wrap hero">
     <div>
-      <div class="badge"><span class="dot"></span> Версия 1.1.0 · бесплатно · MIT</div>
-      <h1>Автокликер для Windows, <span class="accent">который не мешает</span></h1>
+      <div class="badge"><span class="dot"></span> Version 1.1.0 · free · open source (MIT)</div>
+      <h1>Auto clicker for Windows <span class="accent">that stays out of your way</span></h1>
       <p class="lead">
-        Клики мышью, нажатия клавиш и сочетания, запись макросов, глобальные горячие клавиши
-        и работа только в выбранном окне. Две темы, русский и английский интерфейс.
+        Mouse clicks, key presses and shortcuts, macro recording, global hotkeys and a target-window mode
+        that pauses when the app you care about is not focused. English and Russian interface, dark and light themes.
       </p>
       <div class="cta">
         <a class="btn btn-primary" href="https://github.com/mmeell65/Viberium-Autoclicker/releases/latest">
-          ⬇ Скачать для Windows
+          ⬇ Download for Windows
         </a>
-        <a class="btn btn-ghost" href="https://github.com/mmeell65/Viberium-Autoclicker">Исходный код</a>
+        <a class="btn btn-ghost" href="https://github.com/mmeell65/Viberium-Autoclicker">Source code</a>
       </div>
       <div class="meta">
         <span>🪟 Windows 10 / 11 (64-bit)</span>
-        <span>📦 ≈ 100 МБ</span>
-        <span>🔒 Без установщика</span>
-        <span>🆓 Бесплатно навсегда</span>
+        <span>📦 ≈ 100 MB</span>
+        <span>🔒 No installer</span>
+        <span>🆓 Free and open source</span>
       </div>
     </div>
     <div class="hero-shot">
-      <img src="screenshots/keyboard-dark.png" alt="Клавиатурный автокликер Viberium">
+      <img src="screenshots/en/keyboard-dark.png" alt="Viberium keyboard auto clicker in English">
     </div>
   </div>
 
   <section id="features">
     <div class="wrap">
-      <p class="eyebrow">Возможности</p>
-      <h2>Всё для рутинных действий</h2>
-      <p class="sub">Один инструмент вместо пяти утилит: кликер, клавиатура, макросы и горячие клавиши.</p>
+      <p class="eyebrow">Features</p>
+      <h2>Everything for repetitive actions</h2>
+      <p class="sub">One tool instead of five utilities: clicker, keyboard, macros and hotkeys.</p>
       <div class="grid">
-        <div class="card"><span class="ico">🖱</span><h3>Кликер мыши</h3><p>ЛКМ, ПКМ, СКМ, одинарный, двойной и тройной клик. Интервал, разброс, зажатие и лимиты.</p></div>
-        <div class="card"><span class="ico">⌨️</span><h3>Клавиатура и сочетания</h3><p>Несколько кнопок сразу, комбинации с Ctrl, Shift, Alt и Win. Режимы «одновременно» и «по очереди».</p></div>
-        <div class="card"><span class="ico">🎬</span><h3>Макросы</h3><p>Запись кликов, движения мыши и клавиш. Своя скорость, повторы, импорт и экспорт JSON.</p></div>
-        <div class="card"><span class="ico">🔥</span><h3>Горячие клавиши</h3><p>Старт, стоп, удержание и аварийный стоп F8. Работают даже когда окно свёрнуто в трей.</p></div>
-        <div class="card"><span class="ico">🎯</span><h3>Целевое окно</h3><p>Клики только в выбранной программе. Пока окно не в фокусе — автокликер ждёт.</p></div>
-        <div class="card"><span class="ico">🎨</span><h3>Две темы</h3><p>Тёмная и светлая, русский и английский интерфейс. Настройки в профилях.</p></div>
+        <div class="card"><span class="ico">🖱</span><h3>Mouse auto clicker</h3><p>Left, right and middle buttons, single, double and triple clicks. Interval, jitter, hold duration and limits.</p></div>
+        <div class="card"><span class="ico">⌨️</span><h3>Keyboard and combinations</h3><p>Several keys at once, shortcuts with Ctrl, Shift, Alt and Win. "Simultaneous" and "In sequence" press modes.</p></div>
+        <div class="card"><span class="ico">🎬</span><h3>Macros</h3><p>Record clicks, mouse movement and keystrokes. Your own playback speed, repeats, JSON import and export.</p></div>
+        <div class="card"><span class="ico">🔥</span><h3>Global hotkeys</h3><p>Start, stop, hold to run and an emergency stop on F8. They keep working when the window is in the tray.</p></div>
+        <div class="card"><span class="ico">🎯</span><h3>Target window</h3><p>Clicks only inside the selected program. While that window is not focused, the clicker waits.</p></div>
+        <div class="card"><span class="ico">🎨</span><h3>Two themes, two languages</h3><p>Dark and light, English and Russian. Named setting profiles for different tasks.</p></div>
       </div>
     </div>
   </section>
 
   <section id="screens">
     <div class="wrap">
-      <p class="eyebrow">Интерфейс</p>
-      <h2>Выглядит аккуратно</h2>
-      <p class="sub">Никаких перегруженных меню: всё, что нужно, на четырёх экранах.</p>
+      <p class="eyebrow">Interface</p>
+      <h2>Clean and precise</h2>
+      <p class="sub">No overloaded menus: everything you need on four screens.</p>
       <div class="shots">
-        <div class="shot"><img src="screenshots/mouse-dark.png" alt="Кликер мыши"><div class="cap">Кликер мыши</div></div>
-        <div class="shot"><img src="screenshots/keyboard-dark.png" alt="Клавиатура"><div class="cap">Клавиатура и сочетания</div></div>
-        <div class="shot"><img src="screenshots/macros-dark.png" alt="Макросы"><div class="cap">Макросы</div></div>
-        <div class="shot"><img src="screenshots/settings-dark.png" alt="Настройки"><div class="cap">Настройки и профили</div></div>
+        <div class="shot"><img src="screenshots/en/mouse-dark.png" alt="Mouse auto clicker"><div class="cap">Mouse auto clicker</div></div>
+        <div class="shot"><img src="screenshots/en/keyboard-dark.png" alt="Keyboard auto clicker"><div class="cap">Keyboard auto clicker and combinations</div></div>
+        <div class="shot"><img src="screenshots/en/macros-dark.png" alt="Macros"><div class="cap">Macros</div></div>
+        <div class="shot"><img src="screenshots/en/settings-dark.png" alt="Settings"><div class="cap">Settings and profiles</div></div>
       </div>
     </div>
   </section>
 
   <section id="install">
     <div class="wrap">
-      <p class="eyebrow">Установка</p>
-      <h2>Три шага — и готово</h2>
-      <p class="sub">Без установщика, без регистрации и без скрытых доплат.</p>
+      <p class="eyebrow">Download</p>
+      <h2>Three steps and you are done</h2>
+      <p class="sub">No installer, no registration and no hidden payments.</p>
       <div class="steps">
-        <div class="step"><h3>Скачайте архив</h3><p><code>Viberium-windows.zip</code> со страницы релизов.</p></div>
-        <div class="step"><h3>Распакуйте целиком</h3><p><code>Viberium.exe</code> и папка <code>_internal</code> должны лежать рядом.</p></div>
-        <div class="step"><h3>Запустите</h3><p>Откройте <code>Viberium.exe</code>. Настройки хранятся в <code>%APPDATA%\Viberium</code>.</p></div>
+        <div class="step"><h3>Get the archive</h3><p><code>Viberium-windows.zip</code> from the releases page.</p></div>
+        <div class="step"><h3>Extract everything</h3><p><code>Viberium.exe</code> and the <code>_internal</code> folder must stay together.</p></div>
+        <div class="step"><h3>Run it</h3><p>Open <code>Viberium.exe</code>. Settings live in <code>%APPDATA%\Viberium</code>.</p></div>
       </div>
     </div>
   </section>
 
   <section id="faq">
     <div class="wrap">
-      <p class="eyebrow">Вопросы</p>
-      <h2>Частые вопросы</h2>
-      <p class="sub">Коротко о том, что спрашивают чаще всего.</p>
+      <p class="eyebrow">FAQ</p>
+      <h2>Frequently asked questions</h2>
+      <p class="sub">Short answers to what people ask most often.</p>
 
       <details>
-        <summary>Windows пишет, что издатель неизвестен. Это безопасно?</summary>
-        <p>Да. Приложение не подписано платным сертификатом, поэтому SmartScreen предупреждает. Нажмите «Подробнее» → «Выполнить в любом случае». Исходный код открыт на GitHub — можно проверить самостоятельно.</p>
+        <summary>Windows says the publisher is unknown. Is it safe?</summary>
+        <p>Yes. The app is not signed with a paid certificate, so SmartScreen warns you. Click "More info" → "Run anyway". The source code is public, so you can check it yourself.</p>
       </details>
       <details>
-        <summary>Это бесплатно?</summary>
-        <p>Да, полностью. Проект распространяется по лицензии MIT: пользуйтесь, изучайте и меняйте код.</p>
+        <summary>Is it really free?</summary>
+        <p>Yes, completely. The project is released under the MIT licence: use it, study it and change it.</p>
       </details>
       <details>
-        <summary>Клики уходят в другие окна. Как это исправить?</summary>
-        <p>Выберите целевой процесс на странице «Кликер» или «Клавиатура». Пока нужное окно не в фокусе, автокликер не работает.</p>
+        <summary>Clicks go to the wrong window. How do I fix that?</summary>
+        <p>Pick a target process on the "Clicker" or "Keyboard" page. While the chosen window is not in focus, the auto clicker does nothing.</p>
       </details>
       <details>
-        <summary>Можно ли настроить сочетания клавиш?</summary>
-        <p>Да. На странице «Клавиатура» добавляйте несколько кнопок и сочетаний с Ctrl, Shift, Alt и Win, меняйте порядок и выбирайте режим нажатия.</p>
+        <summary>Can I set up keyboard combinations?</summary>
+        <p>Yes. On the "Keyboard" page add several keys and shortcuts with Ctrl, Shift, Alt and Win, reorder them and choose the press mode.</p>
       </details>
       <details>
-        <summary>Где узнать об обновлениях?</summary>
-        <p>В Telegram-канале <a href="https://t.me/viberium_autoclicker">@viberium_autoclicker</a> и в разделе Releases на GitHub.</p>
+        <summary>Where do I find updates?</summary>
+        <p>In the Telegram channel <a href="https://t.me/viberium_autoclicker">@viberium_autoclicker</a> and in the Releases section on GitHub. There is a Russian version of this site too: <a href="https://mmeell65.github.io/Viberium-Autoclicker/ru/">RU</a>.</p>
       </details>
     </div>
   </section>
 
   <div class="wrap">
     <div class="banner">
-      <h2>Попробуйте Viberium</h2>
-      <p>Скачайте последнюю версию и настройте автокликер под свою задачу за пару минут.</p>
-      <a class="btn btn-primary" href="https://github.com/mmeell65/Viberium-Autoclicker/releases/latest">⬇ Скачать бесплатно</a>
+      <h2>Try Viberium</h2>
+      <p>Download the latest version and set up your auto clicker in a couple of minutes.</p>
+      <a class="btn btn-primary" href="https://github.com/mmeell65/Viberium-Autoclicker/releases/latest">⬇ Download for free</a>
     </div>
   </div>
 </main>
@@ -278,8 +290,9 @@
     <div>© 2026 Viberium · MIT License</div>
     <div>
       <a href="https://github.com/mmeell65/Viberium-Autoclicker">GitHub</a> ·
-      <a href="https://github.com/mmeell65/Viberium-Autoclicker/releases">Релизы</a> ·
+      <a href="https://github.com/mmeell65/Viberium-Autoclicker/releases">Releases</a> ·
       <a href="https://t.me/viberium_autoclicker">Telegram</a> ·
+      <a href="https://mmeell65.github.io/Viberium-Autoclicker/ru/">Русский</a> ·
       <a href="https://github.com/mmeell65/Viberium-Autoclicker/blob/main/CHANGELOG.md">Changelog</a>
     </div>
   </div>
@@ -292,20 +305,21 @@
   "name": "Viberium",
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Windows 10, Windows 11",
-  "description": "Автокликер для Windows: кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне.",
-  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"},
+  "inLanguage": "en",
+  "description": "Free open-source auto clicker for Windows 10 and 11 with mouse and keyboard auto clickers, key combinations, macros, global hotkeys and a target-window mode.",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
   "license": "https://github.com/mmeell65/Viberium-Autoclicker/blob/main/LICENSE",
   "url": "https://mmeell65.github.io/Viberium-Autoclicker/",
-  "image": "https://mmeell65.github.io/Viberium-Autoclicker/screenshots/keyboard-dark.png",
+  "image": "https://mmeell65.github.io/Viberium-Autoclicker/screenshots/en/keyboard-dark.png",
   "softwareVersion": "1.1.0",
   "author": {"@type": "Person", "name": "mmeell65"},
   "featureList": [
-    "Кликер мыши: ЛКМ, ПКМ, СКМ, двойной и тройной клик",
-    "Кликер клавиатуры: несколько клавиш и сочетаний с Ctrl, Shift, Alt, Win",
-    "Макросы: запись кликов, движения мыши и клавиш, импорт и экспорт JSON",
-    "Горячие клавиши: старт, стоп, удержание и аварийный стоп F8",
-    "Целевое окно: клики только в выбранной программе",
-    "Тёмная и светлая темы, русский и английский интерфейс"
+    "Mouse auto clicker: left, right and middle buttons, single, double and triple clicks",
+    "Keyboard auto clicker: several keys and combinations with Ctrl, Shift, Alt and Win",
+    "Macros: record clicks, mouse movement and keystrokes, import and export JSON",
+    "Global hotkeys: start, stop, hold to run and an emergency stop on F8",
+    "Target window: clicks only inside the selected application",
+    "Dark and light themes, English and Russian interface"
   ],
   "downloadUrl": "https://github.com/mmeell65/Viberium-Autoclicker/releases/latest/download/Viberium-windows.zip",
   "sameAs": ["https://github.com/mmeell65/Viberium-Autoclicker", "https://t.me/viberium_autoclicker"]
@@ -319,42 +333,42 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "Windows пишет, что издатель неизвестен. Это безопасно?",
+      "name": "Windows says the publisher is unknown. Is it safe?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Да. Приложение не подписано платным сертификатом, поэтому SmartScreen предупреждает. Нажмите «Подробнее» → «Выполнить в любом случае». Исходный код открыт, его можно проверить самостоятельно."
+        "text": "Yes. The app is not signed with a paid certificate, so SmartScreen warns you. Click \"More info\" → \"Run anyway\". The source code is public, so you can check it yourself."
       }
     },
     {
       "@type": "Question",
-      "name": "Это бесплатно?",
+      "name": "Is it really free?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Да, полностью. Проект распространяется по лицензии MIT: можно пользоваться, изучать и менять код."
+        "text": "Yes, completely. The project is released under the MIT licence: use it, study it and change it."
       }
     },
     {
       "@type": "Question",
-      "name": "Клики уходят в другие окна. Как это исправить?",
+      "name": "Clicks go to the wrong window. How do I fix that?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Выберите целевой процесс на странице «Кликер» или «Клавиатура». Пока нужное окно не в фокусе, автокликер не работает."
+        "text": "Pick a target process on the Clicker or Keyboard page. While the chosen window is not in focus, the auto clicker does nothing."
       }
     },
     {
       "@type": "Question",
-      "name": "Можно ли настроить сочетания клавиш?",
+      "name": "Can I set up keyboard combinations?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Да. На странице «Клавиатура» можно добавить несколько кнопок и сочетаний с Ctrl, Shift, Alt и Win, менять порядок и выбирать режим нажатия."
+        "text": "Yes. On the Keyboard page you can add several keys and shortcuts with Ctrl, Shift, Alt and Win, reorder them and choose the press mode."
       }
     },
     {
       "@type": "Question",
-      "name": "Где узнать об обновлениях?",
+      "name": "Where do I find updates?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "В Telegram-канале @viberium_autoclicker и в разделе Releases на GitHub."
+        "text": "In the Telegram channel @viberium_autoclicker and in the Releases section on GitHub."
       }
     }
   ]

@@ -156,7 +156,7 @@ Only the emergency stop is bound by default — **F8**. Everything else is up to
 
 | | |
 |---|---|
-| 🌐 Project website | [mmeell65.github.io/Viberium-Autoclicker](https://mmeell65.github.io/Viberium-Autoclicker/) |
+| 🌐 Project website | [mmeell65.github.io/Viberium-Autoclicker](https://mmeell65.github.io/Viberium-Autoclicker/) · [Russian version](https://mmeell65.github.io/Viberium-Autoclicker/ru/) |
 | ⬇ Releases | [GitHub Releases](../../releases/latest) |
 | 💬 Telegram channel | [@viberium_autoclicker](https://t.me/viberium_autoclicker) |
 | 🗂 Software directory | [AlternativeTo](https://alternativeto.net/software/viberium/) |
