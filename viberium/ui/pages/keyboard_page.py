@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ...core.hotkeys import MODIFIER_VKS
-from ...core.winapi import vk_name
+from ...core.winapi import combo_label, vk_name
 from ...i18n import tr
-from .. import icons
-from ..theme import ACCENT
 from ..widgets import (
     Card,
     HeroCard,
@@ -31,13 +35,14 @@ PRESET_KEYS = (0x20, 0x0D, 0x45, 0x51, 0x46, 0x31)
 
 
 class KeyButton(QPushButton):
-    changed = Signal(int)
+    changed = Signal(object)
     capture_cancelled = Signal()
 
     def __init__(self, manager, vk: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.manager = manager
         self._vk = int(vk)
+        self._combo: list[int] = [int(vk)] if vk else []
         self._waiting = False
         self.setObjectName("KeyTile")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -70,23 +75,30 @@ class KeyButton(QPushButton):
         if not self._waiting:
             return
         self._waiting = False
+        combo: list[int] = []
         if keys:
-            candidates = [key for key in keys if key not in MODIFIER_VKS]
-            if candidates:
-                self._vk = candidates[-1]
-                self.changed.emit(self._vk)
+            combo = [int(key) for key in keys]
+            candidates = [key for key in combo if key not in MODIFIER_VKS]
+            self._vk = candidates[-1] if candidates else combo[-1]
+            self._combo = combo
         self._refresh()
+        if combo:
+            self.changed.emit(list(self._combo))
 
     def _refresh(self) -> None:
         self.setProperty("capturing", "false")
         repolish(self)
-        self.setText(vk_name(self._vk))
-
-    def key_vk(self) -> int:
-        return self._vk
+        if self._combo:
+            self.setText(combo_label(self._combo))
+        else:
+            self.setText(tr("keyboard.press"))
 
     def set_key(self, vk: int) -> None:
-        self._vk = int(vk)
+        self.set_combo([vk])
+
+    def set_combo(self, combo: list[int]) -> None:
+        self._combo = [int(vk) for vk in combo]
+        self._vk = self._combo[-1] if self._combo else 0
         self._refresh()
 
 
@@ -131,9 +143,46 @@ class KeyboardPage(BasePage):
     def _build_key_card(self, cfg: dict) -> QWidget:
         card = Card(tr("card.key"), icon_name="keyboard")
 
-        self.key_button = KeyButton(self.ctx.hotkeys, int(cfg.get("key", 32)))
-        self.key_button.changed.connect(lambda vk: self.save("keyboard", "key", vk))
-        card.add(self.key_button)
+        self._cfg = cfg
+        self._key_rows_layout = QVBoxLayout()
+        self._key_rows_layout.setContentsMargins(0, 0, 0, 0)
+        self._key_rows_layout.setSpacing(8)
+        card.body.addLayout(self._key_rows_layout)
+        self.key_buttons: list[KeyButton] = []
+        self.key_row_widgets: list[QWidget] = []
+        self.key_labels: list[QLabel] = []
+        self.up_buttons: list[QPushButton] = []
+        self.down_buttons: list[QPushButton] = []
+        self.remove_buttons: list[QPushButton] = []
+
+        add_button = QPushButton("+  " + tr("keyboard.add_key"))
+        add_button.setObjectName("GhostButton")
+        add_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_button.clicked.connect(lambda: self._add_key_row([]))
+        card.add(add_button)
+
+        self.mode_control = SegmentedControl(
+            [
+                ("simultaneous", tr("keyboard.mode.simultaneous")),
+                ("sequence", tr("keyboard.mode.sequence")),
+            ],
+            str(cfg.get("key_mode", "simultaneous")),
+        )
+        self.mode_control.changed.connect(self._set_mode)
+        card.add(form_row(tr("keyboard.mode"), self.mode_control))
+
+        self.mode_hint = hint("")
+        card.add(self.mode_hint)
+
+        self.sequence_delay_input = NumberInput(
+            int(cfg.get("sequence_delay_ms", 25)), 0, 5000, 5,
+            suffix=tr("unit.ms"), width=124,
+        )
+        self.sequence_delay_input.valueChanged.connect(
+            lambda value: self.save("keyboard", "sequence_delay_ms", value)
+        )
+        card.add(form_row(tr("keyboard.sequence_delay"), self.sequence_delay_input))
+        self._update_mode_state()
 
         presets = QWidget()
         row = QHBoxLayout(presets)
@@ -148,7 +197,16 @@ class KeyboardPage(BasePage):
         card.add(presets)
 
         card.add(divider())
-        card.add(hint(tr("keyboard.hint")))
+        card.add(hint(tr("keyboard.combo_hint")))
+
+        saved_keys = cfg.get("keys")
+        if not saved_keys:
+            saved_keys = [[int(cfg.get("key", 32))]]
+        for combo in saved_keys:
+            if isinstance(combo, (list, tuple)):
+                self._add_key_row([int(vk) for vk in combo])
+            else:
+                self._add_key_row([int(combo)])
         return card
 
     def _build_interval_card(self, cfg: dict) -> QWidget:
@@ -215,9 +273,126 @@ class KeyboardPage(BasePage):
         return card
 
     # ----------------------------------------------------------------- actions
+    def _add_key_row(self, combo: list[int]) -> None:
+        index = len(self.key_buttons)
+        row_widget = QWidget()
+        row = QHBoxLayout(row_widget)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(6)
+
+        button = KeyButton(self.ctx.hotkeys, combo[-1] if combo else 0)
+        button.setMinimumHeight(42)
+        button.set_combo(combo)
+        button.changed.connect(lambda combo, b=button: self._combo_captured(b, combo))
+        name_label = label(tr("keyboard.combo", n=index + 1), "Hint")
+        row.addWidget(name_label)
+        row.addWidget(button, 1)
+
+        up = QPushButton("↑")
+        up.setObjectName("IconButton")
+        up.setCursor(Qt.CursorShape.PointingHandCursor)
+        up.setFixedWidth(34)
+        up.setToolTip(tr("keyboard.move_up"))
+        up.clicked.connect(lambda _checked=False, b=button: self._move_key(b, -1))
+        row.addWidget(up)
+
+        down = QPushButton("↓")
+        down.setObjectName("IconButton")
+        down.setCursor(Qt.CursorShape.PointingHandCursor)
+        down.setFixedWidth(34)
+        down.setToolTip(tr("keyboard.move_down"))
+        down.clicked.connect(lambda _checked=False, b=button: self._move_key(b, 1))
+        row.addWidget(down)
+
+        remove = QPushButton("×")
+        remove.setObjectName("IconButton")
+        remove.setCursor(Qt.CursorShape.PointingHandCursor)
+        remove.setFixedWidth(34)
+        remove.setToolTip(tr("keyboard.remove_key"))
+        remove.clicked.connect(lambda _checked=False, b=button: self._remove_key(b))
+        row.addWidget(remove)
+
+        self.key_buttons.append(button)
+        self.key_row_widgets.append(row_widget)
+        self.key_labels.append(name_label)
+        self.up_buttons.append(up)
+        self.down_buttons.append(down)
+        self.remove_buttons.append(remove)
+        self._key_rows_layout.addWidget(row_widget)
+        self._renumber_rows()
+        self._save_keys()
+
+    def _combo_captured(self, button: KeyButton, combo: list[int]) -> None:
+        self._save_keys()
+
+    def _save_keys(self) -> None:
+        keys = [list(getattr(button, "_combo", [])) for button in self.key_buttons]
+        keys = [combo for combo in keys if combo]
+        self.save("keyboard", "keys", keys)
+        if keys:
+            self.save("keyboard", "key", keys[0][-1])
+
+    def _move_key(self, button: KeyButton, delta: int) -> None:
+        index = self.key_buttons.index(button)
+        target = index + delta
+        if not 0 <= target < len(self.key_buttons):
+            return
+        for items in (self.key_buttons, self.key_row_widgets, self.key_labels):
+            items[index], items[target] = items[target], items[index]
+        self._rebuild_rows()
+        self._save_keys()
+
+    def _remove_key(self, button: KeyButton) -> None:
+        if len(self.key_buttons) <= 1:
+            return
+        index = self.key_buttons.index(button)
+        self.key_buttons.pop(index)
+        self.key_labels.pop(index)
+        self.up_buttons.pop(index)
+        self.down_buttons.pop(index)
+        self.remove_buttons.pop(index)
+        widget = self.key_row_widgets.pop(index)
+        self._key_rows_layout.removeWidget(widget)
+        widget.deleteLater()
+        self._renumber_rows()
+        self._save_keys()
+
+    def _rebuild_rows(self) -> None:
+        for widget in self.key_row_widgets:
+            self._key_rows_layout.removeWidget(widget)
+        for widget in self.key_row_widgets:
+            self._key_rows_layout.addWidget(widget)
+        self._renumber_rows()
+
+    def _renumber_rows(self) -> None:
+        count = len(self.key_buttons)
+        for index, name_label in enumerate(self.key_labels):
+            name_label.setText(tr("keyboard.combo", n=index + 1))
+        for index, up in enumerate(self.up_buttons):
+            up.setEnabled(index > 0)
+        for index, down in enumerate(self.down_buttons):
+            down.setEnabled(index < count - 1)
+        for remove in self.remove_buttons:
+            remove.setEnabled(count > 1)
+
+    def _set_mode(self, mode: str) -> None:
+        self.save("keyboard", "key_mode", mode)
+        self._update_mode_state()
+
+    def _update_mode_state(self) -> None:
+        sequence = self.mode_control.value() == "sequence"
+        self.sequence_delay_input.setEnabled(sequence)
+        self.mode_hint.setText(
+            tr("keyboard.mode.sequence.hint" if sequence else "keyboard.mode.simultaneous.hint")
+        )
+
     def _apply_preset(self, vk: int) -> None:
-        self.key_button.set_key(vk)
-        self.save("keyboard", "key", vk)
+        if not self.key_buttons:
+            self._add_key_row([vk])
+            return
+        button = self.key_buttons[-1]
+        button.set_combo([vk])
+        self._save_keys()
 
     def _toggle(self) -> None:
         engine = self.ctx.engine

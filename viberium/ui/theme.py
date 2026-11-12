@@ -410,6 +410,21 @@ QPushButton#GhostButton:hover {{
     background: {t['CARD_HOVER']};
     color: {t['TEXT']};
 }}
+QPushButton#IconButton {{
+    background: transparent;
+    border: 1px solid {t['BORDER']};
+    color: {t['DIM']};
+    font-size: 11pt;
+    padding: 0;
+}}
+QPushButton#IconButton:hover {{
+    background: {t['CARD_HOVER']};
+    color: {t['TEXT']};
+}}
+QPushButton#IconButton:disabled {{
+    color: {t['MUTED']};
+    border-color: {t['BORDER']};
+}}
 QPushButton#DangerButton {{
     background: transparent;
     border: 1px solid {t['RED']};

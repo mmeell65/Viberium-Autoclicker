@@ -11,7 +11,7 @@
 [![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?logo=qt&logoColor=white)](https://doc.qt.io/qtforpython/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5b8cff.svg)](LICENSE)
 [![Build](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/mmeell65/Viberium?color=5b8cff&label=release)](../../releases)
+[![Release](https://img.shields.io/github/v/release/mmeell65/Viberium-Autoclicker?color=5b8cff&label=release)](../../releases)
 [![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
 
 [Download](#download) · [Features](#features) · [Screenshots](#screenshots) · [Русский](README.md)
@@ -49,7 +49,10 @@ It is meant for **your own tasks on your own devices**: repetitive clicking, UI 
 - Start delay
 
 ### ⌨️ Keyboard auto clicker
-- Capture any key
+- Several keys and combinations at once
+- Simultaneous or sequential press modes
+- Capture combinations with Ctrl, Shift, Alt, Win
+- Reorder keys and set a delay between them
 - Interval, jitter, hold duration
 - Limits and start delay
 

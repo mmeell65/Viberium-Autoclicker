@@ -16,6 +16,29 @@ from .winapi import IS_WINDOWS
 CLICK_MULTIPLIER = {"single": 1, "double": 2, "triple": 3}
 
 
+def normalize_keyboard_combinations(cfg: dict) -> list[list[int]]:
+    """Normalize saved key combinations, including legacy single-key configs."""
+    raw_keys = cfg.get("keys")
+    if raw_keys is None:
+        raw_keys = [[cfg.get("key", 32)]]
+    if not isinstance(raw_keys, (list, tuple)):
+        raw_keys = [raw_keys]
+    combinations: list[list[int]] = []
+    for item in raw_keys:
+        values = item if isinstance(item, (list, tuple)) else [item]
+        combo: list[int] = []
+        for value in values:
+            try:
+                vk = int(value)
+            except (TypeError, ValueError):
+                continue
+            if vk > 0 and vk not in combo:
+                combo.append(vk)
+        if combo:
+            combinations.append(combo)
+    return combinations
+
+
 def precise_sleep(seconds: float, stop: threading.Event) -> bool:
     """Sleep for `seconds`, returning False if `stop` was set meanwhile."""
     if seconds <= 0:
@@ -208,7 +231,15 @@ class ClickEngine(QObject):
         return "stopped"
 
     def _keyboard_worker(self, cfg: dict, stop: threading.Event) -> str:
-        vk = int(cfg.get("key", 32))
+        combinations = normalize_keyboard_combinations(cfg)
+        if not combinations:
+            try:
+                fallback = int(cfg.get("key", 32))
+            except (TypeError, ValueError):
+                fallback = 32
+            combinations = [[fallback if fallback > 0 else 32]]
+        mode = str(cfg.get("key_mode", "simultaneous"))
+        sequence_delay = max(int(cfg.get("sequence_delay_ms", 25)), 0) / 1000.0
         interval = max(int(cfg.get("interval_ms", 100)), 1) / 1000.0
         spread = min(max(float(cfg.get("randomize", 0)), 0.0), 100.0) / 100.0
         hold = max(int(cfg.get("hold_ms", 0)), 0) / 1000.0
@@ -226,38 +257,70 @@ class ClickEngine(QObject):
         last_emit = 0.0
         last_loop = started
 
-        while not stop.is_set():
-            # Если выбран целевой процесс и активное окно не совпадает — ждём
-            if target_process and not self._window_matches(target_process):
-                if not precise_sleep(0.05, stop):
+        pressed: list[int] = []
+        try:
+            while not stop.is_set():
+                # Если выбран целевой процесс и активное окно не совпадает — ждём
+                if target_process and not self._window_matches(target_process):
+                    if not precise_sleep(0.05, stop):
+                        break
+                    continue
+
+                if mode == "sequence":
+                    press_groups = combinations
+                else:
+                    # In simultaneous mode all configured keys are held together.
+                    merged: list[int] = []
+                    for combo in combinations:
+                        for vk in combo:
+                            if vk not in merged:
+                                merged.append(vk)
+                    press_groups = [merged]
+
+                for group_index, combo in enumerate(press_groups):
+                    for vk in combo:
+                        winapi.key_down(vk)
+                        pressed.append(vk)
+                    if hold and not precise_sleep(hold, stop):
+                        for vk in reversed(combo):
+                            winapi.key_up(vk)
+                            if vk in pressed:
+                                pressed.remove(vk)
+                        return "stopped"
+                    for vk in reversed(combo):
+                        winapi.key_up(vk)
+                        if vk in pressed:
+                            pressed.remove(vk)
+                    if (
+                        mode == "sequence"
+                        and group_index < len(press_groups) - 1
+                        and not precise_sleep(sequence_delay, stop)
+                    ):
+                        return "stopped"
+
+                now = time.perf_counter()
+                periods.append(max(now - last_loop, 0.0005))
+                last_loop = now
+                count += len(combinations) if mode == "sequence" else 1
+                elapsed = now - started
+
+                if limit_presses and count >= limit_presses:
+                    self._emit_stats("keyboard", count, periods, elapsed)
+                    return "limit"
+                if limit_seconds and elapsed >= limit_seconds:
+                    self._emit_stats("keyboard", count, periods, elapsed)
+                    return "limit"
+                if now - last_emit >= 0.12:
+                    self._emit_stats("keyboard", count, periods, elapsed)
+                    last_emit = now
+
+                wait = interval * (1.0 + random.uniform(-spread, spread)) if spread else interval
+                if not precise_sleep(max(wait, 0.001), stop):
                     break
-                continue
-
-            winapi.key_down(vk)
-            if hold and not precise_sleep(hold, stop):
+        finally:
+            # Never leave a key stuck down if the worker stops unexpectedly.
+            for vk in reversed(pressed):
                 winapi.key_up(vk)
-                return "stopped"
-            winapi.key_up(vk)
-
-            now = time.perf_counter()
-            periods.append(max(now - last_loop, 0.0005))
-            last_loop = now
-            count += 1
-            elapsed = now - started
-
-            if limit_presses and count >= limit_presses:
-                self._emit_stats("keyboard", count, periods, elapsed)
-                return "limit"
-            if limit_seconds and elapsed >= limit_seconds:
-                self._emit_stats("keyboard", count, periods, elapsed)
-                return "limit"
-            if now - last_emit >= 0.12:
-                self._emit_stats("keyboard", count, periods, elapsed)
-                last_emit = now
-
-            wait = interval * (1.0 + random.uniform(-spread, spread)) if spread else interval
-            if not precise_sleep(max(wait, 0.001), stop):
-                break
 
         self._emit_stats("keyboard", count, periods, time.perf_counter() - started)
         return "stopped"

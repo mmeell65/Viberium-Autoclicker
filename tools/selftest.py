@@ -15,7 +15,7 @@ from PySide6.QtCore import QCoreApplication  # noqa: E402
 
 from viberium.config import Settings  # noqa: E402
 from viberium.core import winapi  # noqa: E402
-from viberium.core.engine import ClickEngine  # noqa: E402
+from viberium.core.engine import ClickEngine, normalize_keyboard_combinations  # noqa: E402
 from viberium.core.hooks import InputHub  # noqa: E402
 from viberium.core.hotkeys import HotkeyManager  # noqa: E402
 from viberium.core.macros import Macro, MacroPlayer, MacroStore  # noqa: E402
@@ -80,6 +80,53 @@ def main() -> None:
     pump(app, lambda: finished, 5)
     check("keyboard finished by limit", finished and finished[0] == ("keyboard", "limit"), str(finished))
     check("key presses", len([c for c in calls if c[0] == "key_down"]) == 5)
+
+    # multiple keys and combinations
+    check(
+        "keyboard normalize legacy",
+        normalize_keyboard_combinations({"key": 0x41}) == [[0x41]],
+    )
+    check(
+        "keyboard normalize combos",
+        normalize_keyboard_combinations({"keys": [[0x11, 0x53], [0x0D], [0]]}) == [[0x11, 0x53], [0x0D]],
+    )
+    check(
+        "keyboard normalize dedupes",
+        normalize_keyboard_combinations({"keys": [[0x11, 0x11, 0x53]]}) == [[0x11, 0x53]],
+    )
+
+    finished.clear()
+    calls.clear()
+    engine.start_keyboard(
+        {
+            **settings["keyboard"],
+            "keys": [[0x41], [0x42]],
+            "key_mode": "simultaneous",
+            "interval_ms": 15,
+            "limit_presses": 2,
+        }
+    )
+    pump(app, lambda: finished, 5)
+    downs = [c[1] for c in calls if c[0] == "key_down"]
+    check("simultaneous presses together", downs == [0x41, 0x42, 0x41, 0x42], str(downs))
+
+    finished.clear()
+    calls.clear()
+    engine.start_keyboard(
+        {
+            **settings["keyboard"],
+            "keys": [[0x11, 0x53], [0x0D]],
+            "key_mode": "sequence",
+            "sequence_delay_ms": 5,
+            "interval_ms": 15,
+            "limit_presses": 2,
+        }
+    )
+    pump(app, lambda: finished, 5)
+    downs = [c[1] for c in calls if c[0] == "key_down"]
+    ups = [c[1] for c in calls if c[0] == "key_up"]
+    check("sequence order", downs == [0x11, 0x53, 0x0D], str(downs))
+    check("sequence releases in reverse", ups == [0x53, 0x11, 0x0D], str(ups))
 
     # double click and hold
     finished.clear()

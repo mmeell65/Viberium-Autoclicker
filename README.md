@@ -11,7 +11,7 @@
 [![PySide6](https://img.shields.io/badge/PySide6-Qt%206-41CD52?logo=qt&logoColor=white)](https://doc.qt.io/qtforpython/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5b8cff.svg)](LICENSE)
 [![Build](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/mmeell65/Viberium?color=5b8cff&label=release)](../../releases)
+[![Release](https://img.shields.io/github/v/release/mmeell65/Viberium-Autoclicker?color=5b8cff&label=release)](../../releases)
 [![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
 
 [Скачать](#скачать) · [Возможности](#возможности) · [Скриншоты](#скриншоты) · [English](README.en.md)
@@ -49,7 +49,10 @@ Viberium — автокликер для Windows с полностью каст�
 - Задержка перед стартом
 
 ### ⌨️ Автокликер клавиатуры
-- Захват любой клавиши
+- Несколько клавиш и сочетаний одновременно
+- Режимы: одновременное нажатие или по очереди
+- Захват сочетаний с Ctrl, Shift, Alt, Win
+- Перестановка кнопок и пауза между ними
 - Интервал, разброс, длительность нажатия
 - Лимиты и задержка перед стартом
 

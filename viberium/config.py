@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 APP_NAME = "Viberium"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.1.0"
 APP_TAGLINE = "Modern auto clicker for Windows"
 GITHUB_URL = "https://github.com/mmeell65/Viberium-Autoclicker"
 LICENSE_URL = f"{GITHUB_URL}/blob/main/LICENSE"
@@ -36,6 +36,9 @@ DEFAULTS: dict[str, Any] = {
     },
     "keyboard": {
         "key": 32,                 # virtual-key code (space by default)
+        "keys": [[32]],             # several key combinations, in sequence order
+        "key_mode": "simultaneous", # simultaneous | sequence
+        "sequence_delay_ms": 25,
         "interval_ms": 100,
         "randomize": 0,
         "hold_ms": 0,
@@ -98,6 +101,17 @@ def _migrate_legacy(target: Path) -> None:
         pass
 
 
+def _normalize_keyboard(section: dict) -> None:
+    """Migrate a legacy single key into the new key-combination list."""
+    if not isinstance(section, dict) or "keys" in section:
+        return
+    try:
+        key = int(section.get("key", 32) or 32)
+    except (TypeError, ValueError):
+        key = 32
+    section["keys"] = [[key if key > 0 else 32]]
+
+
 def _deep_merge(base: dict, patch: dict) -> dict:
     for key, value in patch.items():
         if key in base and isinstance(base[key], dict) and isinstance(value, dict):
@@ -143,6 +157,7 @@ class Settings:
                     # Old config format: drop saved hotkeys so they start unassigned
                     raw.pop("hotkeys", None)
                     raw["version"] = DEFAULTS["version"]
+                _normalize_keyboard(raw.get("keyboard"))
                 self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
         except (OSError, ValueError):
             self.data = copy.deepcopy(DEFAULTS)
@@ -198,6 +213,7 @@ class Settings:
         for section in ("mouse", "keyboard"):
             if isinstance(raw.get(section), dict):
                 raw[section].pop("target_process", None)
+        _normalize_keyboard(raw.get("keyboard"))
         self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
         self.data["language"] = language
         for section, value in current_targets.items():
