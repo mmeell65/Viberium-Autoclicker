@@ -17,7 +17,7 @@
 [![Build](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml)
 [![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?logo=telegram&logoColor=white)](https://t.me/viberium_autoclicker)
 
-[![⬇ Download for Windows](https://img.shields.io/badge/%E2%9%93%EF%B8%8F_Download-Windows-5b8cff?style=for-the-badge&logo=windows&logoColor=white)](../../releases/latest/download/Viberium-windows.zip)
+[![Download for Windows](https://img.shields.io/badge/Download_Windows-5b8cff?style=for-the-badge&logo=windows&logoColor=white)](../../releases/latest/download/Viberium-windows.zip)
 [![🌐 Project website](https://img.shields.io/badge/🌐_website-1f2a44?style=for-the-badge)](https://mmeell65.github.io/Viberium-Autoclicker/)
 [![💬 Telegram channel](https://img.shields.io/badge/💬_Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/viberium_autoclicker)
 
