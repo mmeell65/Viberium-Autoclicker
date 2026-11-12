@@ -73,5 +73,8 @@ appdata/
 # Screenshots dev helper
 shots/
 
+# Local ffmpeg build (downloaded, not part of the source)
+tools/ffmpeg/
+
 # Build logs
 *.log
