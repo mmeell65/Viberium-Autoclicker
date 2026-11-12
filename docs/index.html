@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viberium — автокликер для Windows: мышь, клавиатура, макросы</title>
+<meta name="description" content="Бесплатный автокликер для Windows: кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне. Скачать бесплатно.">
+<meta name="keywords" content="автокликер, автокликер для Windows, кликер мыши, кликер клавиатуры, макросы, автоматизация, Viberium">
+<link rel="icon" href="screenshots/icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Viberium — автокликер для Windows">
+<meta property="og:description" content="Кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне.">
+<meta property="og:image" content="https://mmeell65.github.io/Viberium-Autoclicker/screenshots/keyboard-dark.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{
+    --bg:#080b12; --bg2:#0b1222; --card:#0e1526; --card2:#111b33;
+    --border:#1e2a44; --border2:#2a3550;
+    --text:#f2f5ff; --muted:#93a1bf; --dim:#6c7a99;
+    --accent:#5b8cff; --accent2:#8fb0ff; --green:#3ddc97;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Segoe UI",system-ui,-apple-system,"Inter",Roboto,Arial,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(900px 500px at 12% -5%, rgba(91,140,255,.18), transparent 60%),
+      radial-gradient(700px 400px at 95% 8%, rgba(38,165,228,.12), transparent 60%);
+  }
+  .wrap{position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:0 24px}
+  a{color:var(--accent2); text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{
+    position:sticky; top:0; z-index:20; backdrop-filter:blur(14px);
+    background:rgba(8,11,18,.82); border-bottom:1px solid var(--border);
+  }
+  .nav{display:flex; align-items:center; gap:18px; height:64px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.4px}
+  .brand img{width:30px; height:30px; border-radius:8px}
+  .brand span{font-size:17px}
+  .nav-links{margin-left:auto; display:flex; gap:20px; align-items:center}
+  .nav-links a{color:var(--muted); font-size:14px}
+  .nav-links a:hover{color:var(--text); text-decoration:none}
+  @media (max-width:720px){ .nav-links{display:none} }
+
+  .hero{padding:72px 0 40px; display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center}
+  @media (max-width:900px){ .hero{grid-template-columns:1fr; padding-top:48px} }
+  .badge{
+    display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--accent2);
+    border:1px solid rgba(91,140,255,.35); background:rgba(91,140,255,.10);
+    padding:6px 12px; border-radius:999px; margin-bottom:18px;
+  }
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 10px var(--green)}
+  h1{font-size:52px; line-height:1.1; margin:0 0 16px; letter-spacing:-1.5px}
+  h1 .accent{color:var(--accent2)}
+  .lead{font-size:18px; color:#b8c6e6; margin:0 0 26px; max-width:520px}
+  .cta{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:22px}
+  .btn{
+    display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:12px;
+    font-weight:600; font-size:15px; border:1px solid transparent; transition:.18s;
+  }
+  .btn:hover{text-decoration:none; transform:translateY(-1px)}
+  .btn-primary{background:linear-gradient(180deg,#6d9bff,#4a7df0); color:#fff; box-shadow:0 10px 30px rgba(91,140,255,.35)}
+  .btn-primary:hover{box-shadow:0 14px 36px rgba(91,140,255,.45)}
+  .btn-ghost{background:rgba(255,255,255,.04); border-color:var(--border2); color:var(--text)}
+  .btn-ghost:hover{background:rgba(255,255,255,.08)}
+  .meta{display:flex; flex-wrap:wrap; gap:16px; color:var(--dim); font-size:13px}
+  .meta span{display:inline-flex; align-items:center; gap:6px}
+
+  .hero-shot{position:relative}
+  .hero-shot img{width:100%; border-radius:18px; border:1px solid var(--border2); box-shadow:0 30px 80px rgba(0,0,0,.55)}
+  .hero-shot::after{
+    content:""; position:absolute; inset:auto 10% -18px 10%; height:40px; border-radius:50%;
+    background:rgba(91,140,255,.25); filter:blur(30px); z-index:-1;
+  }
+
+  section{padding:64px 0}
+  .eyebrow{color:var(--accent2); font-size:13px; letter-spacing:2px; text-transform:uppercase; margin:0 0 10px; font-weight:600}
+  h2{font-size:34px; margin:0 0 12px; letter-spacing:-.8px}
+  .sub{color:var(--muted); margin:0 0 34px; max-width:640px}
+
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  @media (max-width:900px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:600px){ .grid{grid-template-columns:1fr} }
+  .card{
+    background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--border); border-radius:var(--radius); padding:22px;
+    transition:.18s;
+  }
+  .card:hover{border-color:rgba(91,140,255,.45); transform:translateY(-2px)}
+  .card .ico{font-size:22px; margin-bottom:10px; display:block}
+  .card h3{margin:0 0 6px; font-size:16px}
+  .card p{margin:0; color:var(--muted); font-size:14px}
+
+  .shots{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  @media (max-width:800px){ .shots{grid-template-columns:1fr} }
+  .shot{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden}
+  .shot img{width:100%; display:block}
+  .shot .cap{padding:12px 16px; color:var(--muted); font-size:13px; border-top:1px solid var(--border)}
+
+  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; counter-reset:s}
+  @media (max-width:800px){ .steps{grid-template-columns:1fr} }
+  .step{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; position:relative}
+  .step::before{
+    counter-increment:s; content:counter(s);
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:9px; margin-bottom:12px;
+    background:rgba(91,140,255,.15); border:1px solid rgba(91,140,255,.4);
+    color:var(--accent2); font-weight:700; font-size:14px;
+  }
+  .step h3{margin:0 0 6px; font-size:15px}
+  .step p{margin:0; color:var(--muted); font-size:14px}
+  code{background:rgba(255,255,255,.06); border:1px solid var(--border2); padding:2px 6px; border-radius:6px; font-size:13px}
+
+  details{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:10px}
+  details summary{cursor:pointer; font-weight:600; font-size:15px}
+  details p{color:var(--muted); margin:10px 0 0; font-size:14px}
+
+  .banner{
+    margin:12px 0 0; padding:28px; border-radius:20px; text-align:center;
+    background:linear-gradient(135deg,rgba(91,140,255,.16),rgba(38,165,228,.08));
+    border:1px solid rgba(91,140,255,.3);
+  }
+  .banner h2{margin:0 0 8px}
+  .banner p{color:#c6d4f2; margin:0 0 20px}
+
+  footer{border-top:1px solid var(--border); padding:28px 0 40px; color:var(--dim); font-size:13px}
+  .foot{display:flex; flex-wrap:wrap; gap:18px; align-items:center; justify-content:space-between}
+  .foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top">
+      <img src="screenshots/icon.png" alt="Viberium">
+      <span>Viberium</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#features">Возможности</a>
+      <a href="#screens">Скриншоты</a>
+      <a href="#install">Установка</a>
+      <a href="#faq">Вопросы</a>
+      <a href="https://t.me/viberium_autoclicker">Telegram</a>
+      <a href="https://github.com/mmeell65/Viberium-Autoclicker">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div>
+      <div class="badge"><span class="dot"></span> Версия 1.1.0 · бесплатно · MIT</div>
+      <h1>Автокликер для Windows, <span class="accent">который не мешает</span></h1>
+      <p class="lead">
+        Клики мышью, нажатия клавиш и сочетания, запись макросов, глобальные горячие клавиши
+        и работа только в выбранном окне. Две темы, русский и английский интерфейс.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/mmeell65/Viberium-Autoclicker/releases/latest">
+          ⬇ Скачать для Windows
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/mmeell65/Viberium-Autoclicker">Исходный код</a>
+      </div>
+      <div class="meta">
+        <span>🪟 Windows 10 / 11 (64-bit)</span>
+        <span>📦 ≈ 100 МБ</span>
+        <span>🔒 Без установщика</span>
+        <span>🆓 Бесплатно навсегда</span>
+      </div>
+    </div>
+    <div class="hero-shot">
+      <img src="screenshots/keyboard-dark.png" alt="Клавиатурный автокликер Viberium">
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow">Возможности</p>
+      <h2>Всё для рутинных действий</h2>
+      <p class="sub">Один инструмент вместо пяти утилит: кликер, клавиатура, макросы и горячие клавиши.</p>
+      <div class="grid">
+        <div class="card"><span class="ico">🖱</span><h3>Кликер мыши</h3><p>ЛКМ, ПКМ, СКМ, одинарный, двойной и тройной клик. Интервал, разброс, зажатие и лимиты.</p></div>
+        <div class="card"><span class="ico">⌨️</span><h3>Клавиатура и сочетания</h3><p>Несколько кнопок сразу, комбинации с Ctrl, Shift, Alt и Win. Режимы «одновременно» и «по очереди».</p></div>
+        <div class="card"><span class="ico">🎬</span><h3>Макросы</h3><p>Запись кликов, движения мыши и клавиш. Своя скорость, повторы, импорт и экспорт JSON.</p></div>
+        <div class="card"><span class="ico">🔥</span><h3>Горячие клавиши</h3><p>Старт, стоп, удержание и аварийный стоп F8. Работают даже когда окно свёрнуто в трей.</p></div>
+        <div class="card"><span class="ico">🎯</span><h3>Целевое окно</h3><p>Клики только в выбранной программе. Пока окно не в фокусе — автокликер ждёт.</p></div>
+        <div class="card"><span class="ico">🎨</span><h3>Две темы</h3><p>Тёмная и светлая, русский и английский интерфейс. Настройки в профилях.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="wrap">
+      <p class="eyebrow">Интерфейс</p>
+      <h2>Выглядит аккуратно</h2>
+      <p class="sub">Никаких перегруженных меню: всё, что нужно, на четырёх экранах.</p>
+      <div class="shots">
+        <div class="shot"><img src="screenshots/mouse-dark.png" alt="Кликер мыши"><div class="cap">Кликер мыши</div></div>
+        <div class="shot"><img src="screenshots/keyboard-dark.png" alt="Клавиатура"><div class="cap">Клавиатура и сочетания</div></div>
+        <div class="shot"><img src="screenshots/macros-dark.png" alt="Макросы"><div class="cap">Макросы</div></div>
+        <div class="shot"><img src="screenshots/settings-dark.png" alt="Настройки"><div class="cap">Настройки и профили</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <p class="eyebrow">Установка</p>
+      <h2>Три шага — и готово</h2>
+      <p class="sub">Без установщика, без регистрации и без скрытых доплат.</p>
+      <div class="steps">
+        <div class="step"><h3>Скачайте архив</h3><p><code>Viberium-windows.zip</code> со страницы релизов.</p></div>
+        <div class="step"><h3>Распакуйте целиком</h3><p><code>Viberium.exe</code> и папка <code>_internal</code> должны лежать рядом.</p></div>
+        <div class="step"><h3>Запустите</h3><p>Откройте <code>Viberium.exe</code>. Настройки хранятся в <code>%APPDATA%\Viberium</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <p class="eyebrow">Вопросы</p>
+      <h2>Частые вопросы</h2>
+      <p class="sub">Коротко о том, что спрашивают чаще всего.</p>
+
+      <details>
+        <summary>Windows пишет, что издатель неизвестен. Это безопасно?</summary>
+        <p>Да. Приложение не подписано платным сертификатом, поэтому SmartScreen предупреждает. Нажмите «Подробнее» → «Выполнить в любом случае». Исходный код открыт на GitHub — можно проверить самостоятельно.</p>
+      </details>
+      <details>
+        <summary>Это бесплатно?</summary>
+        <p>Да, полностью. Проект распространяется по лицензии MIT: пользуйтесь, изучайте и меняйте код.</p>
+      </details>
+      <details>
+        <summary>Клики уходят в другие окна. Как это исправить?</summary>
+        <p>Выберите целевой процесс на странице «Кликер» или «Клавиатура». Пока нужное окно не в фокусе, автокликер не работает.</p>
+      </details>
+      <details>
+        <summary>Можно ли настроить сочетания клавиш?</summary>
+        <p>Да. На странице «Клавиатура» добавляйте несколько кнопок и сочетаний с Ctrl, Shift, Alt и Win, меняйте порядок и выбирайте режим нажатия.</p>
+      </details>
+      <details>
+        <summary>Где узнать об обновлениях?</summary>
+        <p>В Telegram-канале <a href="https://t.me/viberium_autoclicker">@viberium_autoclicker</a> и в разделе Releases на GitHub.</p>
+      </details>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="banner">
+      <h2>Попробуйте Viberium</h2>
+      <p>Скачайте последнюю версию и настройте автокликер под свою задачу за пару минут.</p>
+      <a class="btn btn-primary" href="https://github.com/mmeell65/Viberium-Autoclicker/releases/latest">⬇ Скачать бесплатно</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>© 2026 Viberium · MIT License</div>
+    <div>
+      <a href="https://github.com/mmeell65/Viberium-Autoclicker">GitHub</a> ·
+      <a href="https://github.com/mmeell65/Viberium-Autoclicker/releases">Релизы</a> ·
+      <a href="https://t.me/viberium_autoclicker">Telegram</a> ·
+      <a href="https://github.com/mmeell65/Viberium-Autoclicker/blob/main/CHANGELOG.md">Changelog</a>
+    </div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Viberium",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "description": "Автокликер для Windows: кликер мыши и клавиатуры, сочетания клавиш, макросы, горячие клавиши и работа только в выбранном окне.",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "RUB"},
+  "license": "https://github.com/mmeell65/Viberium-Autoclicker/blob/main/LICENSE",
+  "url": "https://mmeell65.github.io/Viberium-Autoclicker/"
+}
+</script>
+
+</body>
+</html>
