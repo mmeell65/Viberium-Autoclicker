@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...core.hotkeys import MODIFIER_VKS
+from ...core.vkeys import MODIFIER_VKS, normalize_vk
 from ...core.winapi import combo_label, vk_name
 from ...i18n import tr
 from ..widgets import (
@@ -77,7 +77,10 @@ class KeyButton(QPushButton):
         self._waiting = False
         combo: list[int] = []
         if keys:
-            combo = [int(key) for key in keys]
+            for key in keys:
+                code = normalize_vk(key)
+                if code > 0 and code not in combo:
+                    combo.append(code)
             candidates = [key for key in combo if key not in MODIFIER_VKS]
             self._vk = candidates[-1] if candidates else combo[-1]
             self._combo = combo
@@ -97,7 +100,11 @@ class KeyButton(QPushButton):
         self.set_combo([vk])
 
     def set_combo(self, combo: list[int]) -> None:
-        self._combo = [int(vk) for vk in combo]
+        self._combo = []
+        for value in combo:
+            code = normalize_vk(value)
+            if code > 0 and code not in self._combo:
+                self._combo.append(code)
         self._vk = self._combo[-1] if self._combo else 0
         self._refresh()
 

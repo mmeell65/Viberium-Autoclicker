@@ -9,8 +9,8 @@ from __future__ import annotations
 from PySide6.QtCore import QObject, Signal
 
 from .hooks import InputHub
+from .vkeys import MODIFIER_VKS, normalize_vk
 
-MODIFIER_VKS = {0x10, 0x11, 0x12, 0x5B, 0x5C}
 VK_ESCAPE = 0x1B
 
 MOUSE_X1 = 0x05
@@ -103,6 +103,9 @@ class HotkeyManager(QObject):
     def _handle_key(self, vk: int, down: bool, injected: bool, ts: float) -> bool:
         if injected:
             return False
+
+        # Hooks report left/right modifier codes; use generic ones everywhere.
+        vk = normalize_vk(vk)
 
         if self._capturing:
             self._capture_key(vk, down)

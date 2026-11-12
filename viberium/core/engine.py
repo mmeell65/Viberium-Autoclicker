@@ -11,6 +11,7 @@ from typing import Callable
 from PySide6.QtCore import QObject, Signal
 
 from . import winapi
+from .vkeys import normalize_vk
 from .winapi import IS_WINDOWS
 
 CLICK_MULTIPLIER = {"single": 1, "double": 2, "triple": 3}
@@ -29,7 +30,7 @@ def normalize_keyboard_combinations(cfg: dict) -> list[list[int]]:
         combo: list[int] = []
         for value in values:
             try:
-                vk = int(value)
+                vk = normalize_vk(int(value))
             except (TypeError, ValueError):
                 continue
             if vk > 0 and vk not in combo:
@@ -234,7 +235,7 @@ class ClickEngine(QObject):
         combinations = normalize_keyboard_combinations(cfg)
         if not combinations:
             try:
-                fallback = int(cfg.get("key", 32))
+                fallback = normalize_vk(int(cfg.get("key", 32)))
             except (TypeError, ValueError):
                 fallback = 32
             combinations = [[fallback if fallback > 0 else 32]]

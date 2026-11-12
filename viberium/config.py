@@ -9,6 +9,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from .core.vkeys import normalize_vk
+
 APP_NAME = "Viberium"
 APP_VERSION = "1.1.0"
 APP_TAGLINE = "Modern auto clicker for Windows"
@@ -102,14 +104,45 @@ def _migrate_legacy(target: Path) -> None:
 
 
 def _normalize_keyboard(section: dict) -> None:
-    """Migrate a legacy single key into the new key-combination list."""
-    if not isinstance(section, dict) or "keys" in section:
+    """Normalize key combinations and migrate a legacy single key."""
+    if not isinstance(section, dict):
         return
-    try:
-        key = int(section.get("key", 32) or 32)
-    except (TypeError, ValueError):
-        key = 32
-    section["keys"] = [[key if key > 0 else 32]]
+    raw_keys = section.get("keys")
+    if raw_keys is None:
+        raw_keys = [[section.get("key", 32)]]
+    if not isinstance(raw_keys, (list, tuple)):
+        raw_keys = [raw_keys]
+    combinations: list[list[int]] = []
+    for item in raw_keys:
+        values = item if isinstance(item, (list, tuple)) else [item]
+        combo: list[int] = []
+        for value in values:
+            vk = normalize_vk(value)
+            if vk > 0 and vk not in combo:
+                combo.append(vk)
+        if combo:
+            combinations.append(combo)
+    section["keys"] = combinations
+    if combinations:
+        section["key"] = combinations[0][-1]
+
+
+def _normalize_hotkeys(section: dict) -> None:
+    """Collapse left/right modifier codes in saved hotkey bindings."""
+    if not isinstance(section, dict):
+        return
+    for bindings in section.values():
+        if not isinstance(bindings, dict):
+            continue
+        for name, value in list(bindings.items()):
+            if not isinstance(value, (list, tuple)):
+                continue
+            normalized: list[int] = []
+            for item in value:
+                vk = normalize_vk(item)
+                if vk > 0 and vk not in normalized:
+                    normalized.append(vk)
+            bindings[name] = normalized
 
 
 def _deep_merge(base: dict, patch: dict) -> dict:
@@ -157,6 +190,7 @@ class Settings:
                     # Old config format: drop saved hotkeys so they start unassigned
                     raw.pop("hotkeys", None)
                     raw["version"] = DEFAULTS["version"]
+                _normalize_hotkeys(raw.get("hotkeys"))
                 _normalize_keyboard(raw.get("keyboard"))
                 self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
         except (OSError, ValueError):
@@ -213,6 +247,7 @@ class Settings:
         for section in ("mouse", "keyboard"):
             if isinstance(raw.get(section), dict):
                 raw[section].pop("target_process", None)
+        _normalize_hotkeys(raw.get("hotkeys"))
         _normalize_keyboard(raw.get("keyboard"))
         self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
         self.data["language"] = language

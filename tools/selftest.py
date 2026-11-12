@@ -94,6 +94,10 @@ def main() -> None:
         "keyboard normalize dedupes",
         normalize_keyboard_combinations({"keys": [[0x11, 0x11, 0x53]]}) == [[0x11, 0x53]],
     )
+    check(
+        "keyboard normalize modifiers",
+        normalize_keyboard_combinations({"keys": [[0xA2, 0x53]]}) == [[0x11, 0x53]],
+    )
 
     finished.clear()
     calls.clear()
@@ -205,6 +209,27 @@ def main() -> None:
     hotkeys._handle_key(0x53, True, False, 0.0)
     check("capture returns combo", captured == [[0x11, 0x53]], str(captured))
 
+    # low-level hooks report left/right modifier codes; everything must normalize
+    captured.clear()
+    events.clear()
+    hotkeys.release_all()
+    settings.data["hotkeys"]["mouse"]["toggle"] = [0x11, 0x53]
+    hotkeys.reload()
+    hotkeys._handle_key(0xA2, True, False, 0.0)
+    check("raw modifier does not fire alone", events == [])
+    hotkeys._handle_key(0x53, True, False, 0.0)
+    check("raw modifier combo fires", events == ["toggle"], str(events))
+    hotkeys._handle_key(0x53, False, False, 0.1)
+    hotkeys._handle_key(0xA2, False, False, 0.1)
+
+    captured.clear()
+    hotkeys.begin_capture(None)
+    hotkeys._handle_key(0xA2, True, False, 0.0)
+    hotkeys._handle_key(0xA0, True, False, 0.0)
+    check("capture waits for main key", captured == [], str(captured))
+    hotkeys._handle_key(0x41, True, False, 0.0)
+    check("capture normalizes modifiers", captured == [[0x11, 0x10, 0x41]], str(captured))
+
     # ----------------------------------------------------------------- macros
     calls.clear()
     macro = Macro(
@@ -256,6 +281,30 @@ def main() -> None:
     again.delete_profile("Профиль 1")
     check("profile deleted", again.profile_names() == [])
 
+    migration_dir = tmp / "migration"
+    migration_dir.mkdir()
+    (migration_dir / "config.json").write_text(
+        json.dumps(
+            {
+                "version": 3,
+                "keyboard": {"key": 0x53, "keys": [[0xA2, 0x53]]},
+                "hotkeys": {"mouse": {"toggle": [0xA3, 0x41]}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    migrated = Settings(directory=migration_dir)
+    check(
+        "config normalizes keyboard modifiers",
+        migrated["keyboard"]["keys"] == [[0x11, 0x53]],
+        str(migrated["keyboard"]["keys"]),
+    )
+    check(
+        "config normalizes hotkey modifiers",
+        migrated["hotkeys"]["mouse"]["toggle"] == [0x11, 0x41],
+        str(migrated["hotkeys"]["mouse"]["toggle"]),
+    )
+
     # -------------------------------------------------------------------- i18n
     tr.set_language("ru")
     ru_text = tr("btn.start")
@@ -264,6 +313,16 @@ def main() -> None:
     check("i18n switches", (ru_text, en_text) == ("Старт", "Start"), f"{ru_text} / {en_text}")
     check("i18n formats", tr("settings.version", v="1.0.0") == "Version 1.0.0")
     check("vk names", winapi.combo_label([0x11, 0x53]) == "Ctrl + S", winapi.combo_label([0x11, 0x53]))
+    check(
+        "vk modifier aliases",
+        winapi.vk_name(0xA2) == "Ctrl" and winapi.vk_name(0xA4) == "Alt",
+        f"{winapi.vk_name(0xA2)} / {winapi.vk_name(0xA4)}",
+    )
+    check(
+        "combo label normalizes modifiers",
+        winapi.combo_label([0xA2, 0x53]) == "Ctrl + S",
+        winapi.combo_label([0xA2, 0x53]),
+    )
 
     print("\nAll checks passed.")
 

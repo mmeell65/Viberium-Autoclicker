@@ -8,6 +8,7 @@ import time
 from ctypes import wintypes
 
 from ..i18n import tr
+from .vkeys import normalize_vk
 
 IS_WINDOWS = sys.platform == "win32"
 
@@ -243,11 +244,17 @@ def press_key(vk: int, hold: float = 0.0) -> None:
 
 
 def vk_name(vk: int) -> str:
-    return VK_NAMES.get(vk, f"VK{vk:02X}")
+    code = normalize_vk(vk)
+    return VK_NAMES.get(code, f"VK{code:02X}")
 
 
 # ----------------------------------------------------------------- key names
-_MODIFIERS = {0x10: "Shift", 0x11: "Ctrl", 0x12: "Alt", 0x5B: "Win", 0x5C: "Win"}
+_MODIFIERS = {
+    0x10: "Shift", 0x11: "Ctrl", 0x12: "Alt", 0x5B: "Win", 0x5C: "Win",
+    0xA0: "Shift", 0xA1: "Shift",
+    0xA2: "Ctrl", 0xA3: "Ctrl",
+    0xA4: "Alt", 0xA5: "Alt",
+}
 
 VK_NAMES: dict[int, str] = {
     **_MODIFIERS,
@@ -274,8 +281,13 @@ VK_NAMES.update({0x6A: "Num*", 0x6B: "Num+", 0x6D: "Num-", 0x6E: "Num.", 0x6F: "
 def combo_label(vks: list[int] | tuple[int, ...] | None) -> str:
     if not vks:
         return ""
+    codes: list[int] = []
+    for value in vks:
+        code = normalize_vk(value)
+        if code not in codes:
+            codes.append(code)
     order = {0x11: 0, 0x10: 1, 0x12: 2, 0x5B: 3, 0x5C: 3}
-    ordered = sorted(vks, key=lambda code: (order.get(code, 9), code))
+    ordered = sorted(codes, key=lambda code: (order.get(code, 9), code))
     names = []
     for code in ordered:
         name = VK_NAMES.get(code, f"VK{code:02X}")
