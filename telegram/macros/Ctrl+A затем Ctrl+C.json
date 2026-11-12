@@ -1,0 +1,47 @@
+{
+  "name": "Ctrl+A затем Ctrl+C",
+  "duration": 0.6,
+  "created": "2026-11-12T19:11:16",
+  "events": [
+    {
+      "type": "key_down",
+      "t": 0.0,
+      "vk": 17
+    },
+    {
+      "type": "key_up",
+      "t": 0.05,
+      "vk": 17
+    },
+    {
+      "type": "key_down",
+      "t": 0.15,
+      "vk": 65
+    },
+    {
+      "type": "key_up",
+      "t": 0.2,
+      "vk": 65
+    },
+    {
+      "type": "key_down",
+      "t": 0.3,
+      "vk": 17
+    },
+    {
+      "type": "key_up",
+      "t": 0.35,
+      "vk": 17
+    },
+    {
+      "type": "key_down",
+      "t": 0.45,
+      "vk": 67
+    },
+    {
+      "type": "key_up",
+      "t": 0.5,
+      "vk": 67
+    }
+  ]
+}
