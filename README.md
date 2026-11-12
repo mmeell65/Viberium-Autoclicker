@@ -13,8 +13,9 @@
 [![Build](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/mmeell65/Viberium-Autoclicker?color=5b8cff&label=release)](../../releases)
 [![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
+[![Telegram](https://img.shields.io/badge/Telegram-канал-26A5E4?logo=telegram&logoColor=white)](https://t.me/viberium_autoclicker)
 
-[Скачать](#скачать) · [Возможности](#возможности) · [Скриншоты](#скриншоты) · [English](README.en.md)
+[Скачать](#скачать) · [Возможности](#возможности) · [Скриншоты](#скриншоты) · [Telegram](#telegram) · [English](README.en.md)
 
 </div>
 
@@ -29,6 +30,10 @@ Viberium — автокликер для Windows с полностью каст�
 Внутри — всё, что нужно для рутинных действий: кликер мыши, кликер клавиатуры, запись макросов, глобальные горячие клавиши и работа только в выбранном окне. Интерфейс на русском и английском, тёмная и светлая темы.
 
 Проект задуман как инструмент для **своих задач на своих устройствах**: повторяющиеся клики, тестирование интерфейсов, автоматизация рутины в программах. Пожалуйста, не используйте его для нарушения правил игр и сервисов.
+
+## Telegram
+
+Новости, обновления и советы по Viberium — в телеграм-канале **[@viberium_autoclicker](https://t.me/viberium_autoclicker)**.
 
 ## Возможности
 

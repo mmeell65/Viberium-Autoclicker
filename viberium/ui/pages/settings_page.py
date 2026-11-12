@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ...config import APP_VERSION, GITHUB_URL, LICENSE_URL
+from ...config import APP_VERSION, GITHUB_URL, LICENSE_URL, TELEGRAM_URL
 from ...i18n import tr
 from ...utils import is_autostart_enabled, set_autostart
 from .. import icons
@@ -195,6 +195,13 @@ class SettingsPage(BasePage):
         github.setIcon(icons.icon("globe", DIM, 15))
         github.clicked.connect(lambda: webbrowser.open(GITHUB_URL))
         link_row.addWidget(github)
+
+        telegram = QPushButton(tr("settings.telegram"))
+        telegram.setObjectName("GhostButton")
+        telegram.setCursor(Qt.CursorShape.PointingHandCursor)
+        telegram.setIcon(icons.icon("telegram", DIM, 15))
+        telegram.clicked.connect(lambda: webbrowser.open(TELEGRAM_URL))
+        link_row.addWidget(telegram)
 
         license_link = QLabel(
             f'<a href="{LICENSE_URL}" style="color:{ACCENT}; text-decoration:none;">'

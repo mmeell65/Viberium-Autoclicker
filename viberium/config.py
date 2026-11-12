@@ -16,6 +16,7 @@ APP_VERSION = "1.1.0"
 APP_TAGLINE = "Modern auto clicker for Windows"
 GITHUB_URL = "https://github.com/mmeell65/Viberium-Autoclicker"
 LICENSE_URL = f"{GITHUB_URL}/blob/main/LICENSE"
+TELEGRAM_URL = "https://t.me/viberium_autoclicker"
 
 DEFAULTS: dict[str, Any] = {
     "language": "ru",

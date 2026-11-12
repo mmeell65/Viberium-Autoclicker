@@ -13,8 +13,9 @@
 [![Build](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml/badge.svg)](https://github.com/mmeell65/Viberium-Autoclicker/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/mmeell65/Viberium-Autoclicker?color=5b8cff&label=release)](../../releases)
 [![Download](https://img.shields.io/badge/download-Windows-5b8cff?logo=windows&logoColor=white)](../../releases/latest)
+[![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?logo=telegram&logoColor=white)](https://t.me/viberium_autoclicker)
 
-[Download](#download) · [Features](#features) · [Screenshots](#screenshots) · [Русский](README.md)
+[Download](#download) · [Features](#features) · [Screenshots](#screenshots) · [Telegram](#telegram) · [Русский](README.md)
 
 </div>
 
@@ -27,6 +28,10 @@
 Viberium is a Windows auto clicker with a fully custom interface. It works with system input directly, so clicks and key presses are precise and smooth — no browser delays or extra layers in between.
 
 It has everything you need for routine actions: a mouse clicker, a keyboard clicker, macro recording, global hotkeys and a target-window mode. The interface is available in Russian and English, with dark and light themes.
+
+## Telegram
+
+News, updates and tips about Viberium — in the Telegram channel **[@viberium_autoclicker](https://t.me/viberium_autoclicker)**.
 
 It is meant for **your own tasks on your own devices**: repetitive clicking, UI testing, automating routine actions in desktop apps. Please don't use it to break the rules of games or services.
 

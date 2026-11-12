@@ -187,6 +187,7 @@ RU: dict[str, str] = {
     "settings.about.text": "Современный автокликер для Windows: точные клики, горячие клавиши, макросы и профили.",
     "settings.version": "Версия {v}",
     "settings.github": "Открыть репозиторий",
+    "settings.telegram": "Telegram-канал",
     "settings.license": "Лицензия MIT",
     # hotkeys
     "hotkey.press": "Нажмите…",
@@ -382,6 +383,7 @@ EN: dict[str, str] = {
     "settings.about.text": "A modern Windows auto clicker: precise clicks, hotkeys, macros and profiles.",
     "settings.version": "Version {v}",
     "settings.github": "Open repository",
+    "settings.telegram": "Telegram channel",
     "settings.license": "MIT License",
     "hotkey.press": "Press…",
     "hotkey.esc_cancel": "Esc — cancel",
