@@ -100,6 +100,7 @@ class MacroStore:
 class MacroRecorder(QObject):
     tick = Signal(int, float)       # actions, seconds
     finished = Signal(object)       # Macro
+    state_changed = Signal(bool)    # recording active
 
     def __init__(self, hub: InputHub, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -110,21 +111,37 @@ class MacroRecorder(QObject):
         self._last_move = (0.0, 0, 0)
         self._last_tick = 0.0
         self._lock = threading.Lock()
-        self.record_moves = True
+        self.record_moves = False
+        # Callable(raw_vk) -> bool: keys that belong to an application hotkey
+        # (record start/stop, play, emergency) and must not enter the macro.
+        self.skip_key = None
+
+    def _is_hotkey_key(self, vk: int) -> bool:
+        matcher = self.skip_key
+        if matcher is None:
+            return False
+        try:
+            return bool(matcher(vk))
+        except Exception:
+            return False
 
     @property
     def active(self) -> bool:
         return self._active
 
-    def start(self) -> None:
+    def start(self, record_moves: bool | None = None) -> None:
         if self._active:
             return
+        if record_moves is not None:
+            self.record_moves = bool(record_moves)
         self._events = []
         self._active = True
         self._start = time.perf_counter()
         self._last_move = (0.0, 0, 0)
+        self._last_tick = 0.0
         self.hub.add_key_listener(self._on_key)
         self.hub.add_mouse_listener(self._on_mouse)
+        self.state_changed.emit(True)
 
     def stop(self) -> Macro | None:
         if not self._active:
@@ -139,6 +156,7 @@ class MacroRecorder(QObject):
             duration=duration,
             created=datetime.now().isoformat(timespec="seconds"),
         )
+        self.state_changed.emit(False)
         self.finished.emit(macro)
         return macro
 
@@ -153,6 +171,10 @@ class MacroRecorder(QObject):
         self.tick.emit(len(self._events), round(ts - self._start, 2))
 
     def _on_key(self, vk: int, down: bool, injected: bool, ts: float) -> bool:
+        # Never record the shortcut that stops the recording (or any other
+        # application hotkey) — otherwise the macro replays it on playback.
+        if self._is_hotkey_key(vk):
+            return False
         if not self._active or injected:
             return False
         event = {"t": self._stamp(ts), "type": "key_down" if down else "key_up", "vk": int(vk)}
@@ -222,8 +244,12 @@ class MacroPlayer(QObject):
         self._thread.start()
         return True
 
-    def stop(self) -> None:
+    def stop(self, wait: bool = False) -> None:
         self._stop.set()
+        if wait:
+            thread = self._thread
+            if thread is not None and thread.is_alive():
+                thread.join(timeout=1.0)
 
     def _run(self, macro: Macro, speed: float, loops: int) -> None:
         total = max(macro.duration, 0.001)
@@ -242,6 +268,8 @@ class MacroPlayer(QObject):
                             return
                     self._apply(event)
                     self.progress.emit(min(float(event.get("t", 0.0)) / total, 1.0))
+        except Exception:
+            pass
         finally:
             self._release()
             self._thread = None
@@ -253,17 +281,22 @@ class MacroPlayer(QObject):
         if kind == "move":
             winapi.set_cursor_pos(int(event.get("x", 0)), int(event.get("y", 0)))
         elif kind == "down":
+            # Jump straight to the recorded point, so the click lands exactly
+            # where it was recorded even when movement is not replayed.
+            if "x" in event and "y" in event:
+                winapi.set_cursor_pos(int(event.get("x", 0)), int(event.get("y", 0)))
             winapi.mouse_down(str(event.get("button", "left")))
         elif kind == "up":
             winapi.mouse_up(str(event.get("button", "left")))
         elif kind == "wheel":
+            if "x" in event and "y" in event:
+                winapi.set_cursor_pos(int(event.get("x", 0)), int(event.get("y", 0)))
             winapi.mouse_wheel(int(event.get("delta", 0)))
         elif kind == "key_down":
             winapi.key_down(int(event.get("vk", 0)))
         elif kind == "key_up":
             winapi.key_up(int(event.get("vk", 0)))
 
-    @staticmethod
-    def _release() -> None:
+    def _release(self) -> None:
         for button in ("left", "right", "middle"):
             winapi.mouse_up(button)

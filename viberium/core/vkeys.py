@@ -16,6 +16,11 @@ _MODIFIER_ALIASES = {
     0xA5: 0x12,  # VK_RMENU (Alt)
 }
 
+# Reverse lookup: generic modifier -> the physical left/right variants.
+MODIFIER_ALIASES: dict[int, tuple[int, ...]] = {}
+for _side, _generic in _MODIFIER_ALIASES.items():
+    MODIFIER_ALIASES[_generic] = MODIFIER_ALIASES.get(_generic, ()) + (_side,)
+
 
 def normalize_vk(vk: int) -> int:
     """Collapse left/right modifier keys into their generic virtual-key codes."""

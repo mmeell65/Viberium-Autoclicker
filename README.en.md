@@ -29,13 +29,14 @@
 
 ---
 
-## What's new in 1.1.1
+## What's new in 1.2.0
 
-- **Modifier-free clicks**: a new option on the Clicker page releases held Shift, Ctrl, Alt and Win for the duration of each click, so the target program receives a plain click instead of Shift+click.
-- **Hotkeys with a held modifier**: Shift, Ctrl, Alt and Win no longer block start, stop and emergency stop.
-- **A clear message** when Windows blocks input injection.
+- **A hotkey per macro**: assign it right in the macro's row; it runs that macro and stops it when pressed again.
+- **Macro hotkeys work everywhere**: on any page of the app, in other windows and while Viberium is minimized to the tray.
+- **Fixed lingering in Task Manager**: on exit the app releases its input hooks and finishes all threads, so no extra processes stay behind.
+- **Settings survive updates** from older versions.
 
-[Full changelog](CHANGELOG.md) · [Download 1.1.1](../../releases/latest)
+[Full changelog](CHANGELOG.md) · [Download 1.2.0](../../releases/latest)
 
 ## Windows auto clicker
 
@@ -83,6 +84,7 @@ It is meant for **your own tasks on your own devices**: repetitive clicking, UI 
 - Record clicks, cursor movement and keys
 - Playback with custom speed
 - Repeats and a macro library
+- A hotkey per macro
 - JSON import / export
 
 ### ⌨️🔥 Hotkeys
@@ -148,6 +150,7 @@ No installation needed. Settings live in `%APPDATA%\Viberium`.
 Only the emergency stop is bound by default — **F8**. Everything else is up to you on the "Clicker", "Keyboard" and "Macros" pages.
 
 - Bindings are global, even when the window is minimized to tray.
+- Each macro has its own binding on the "Macros" page: it runs that macro and stops it when pressed again.
 - Ctrl, Alt, Shift, Win and mouse side buttons X1/X2 are supported.
 - Clicking a capture field again cancels recording and clears the binding; the **×** button does the same.
 

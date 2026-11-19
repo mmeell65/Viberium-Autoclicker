@@ -79,9 +79,14 @@ class BasePage(QWidget):
 
         self._hotkey_buttons: dict[str, HotkeyButton] = getattr(self, "_hotkey_buttons", {})
         self._hotkey_buttons[context] = {}
+        self._hotkey_rows: dict[tuple[str, str], tuple[QWidget, QWidget]] = getattr(
+            self, "_hotkey_rows", {}
+        )
 
         for key, title_key, hint_key in fields:
             binding = hotkeys_section.get(key) or []
+            if context == "global" and key == "record":
+                binding = binding or (self.settings["hotkeys"].get("macros") or {}).get("record") or []
             button = HotkeyButton(self.ctx.hotkeys, binding)
             button.changed.connect(
                 lambda binding, ctx=context, name=key: self._on_hotkey(ctx, name, binding)
@@ -91,7 +96,10 @@ class BasePage(QWidget):
             )
             self._hotkey_buttons[context][key] = button
             hint_text = tr(hint_key) if hint_key else ""
-            card.add(form_row(tr(title_key), button, hint_text))
+            row = form_row(tr(title_key), button, hint_text)
+            card.add(row)
+            # Keep references so the row can be hidden/shown later on
+            self._hotkey_rows[(context, key)] = (row, card)
 
         if title is None:
             card.add(divider())
@@ -102,8 +110,10 @@ class BasePage(QWidget):
         section = self.settings.data["hotkeys"].get(context) or {}
         # пустая привязка — просто сбрасываем, без проверки конфликтов
         if binding:
-            for other, other_binding in section.items():
-                if other == name:
+            for other_context, other, other_binding in self.ctx.hotkeys.all_bindings():
+                if name == "record" and other == "record":
+                    continue  # one shared macro-record shortcut
+                if (other_context, other) == (context, name):
                     continue
                 if list(other_binding or []) == list(binding):
                     self.ctx.toast(tr("hotkey.conflict"), "error")
@@ -111,18 +121,40 @@ class BasePage(QWidget):
                     return
         section[name] = list(binding)
         self.settings.data["hotkeys"][context] = section
+        # The macro record hotkey is one shortcut everywhere: keep both copies equal
+        _sync_record_bindings(self.settings, context, name, self._hotkey_buttons)
         self.settings.save()
         self.ctx.hotkeys.reload()
+        self.ctx.hotkeys._sync_bindings()
+        self._sync_record_buttons()
         self.ctx.refresh_hints()
 
     def _reset_hotkey(self, context: str, name: str) -> None:
         section = self.settings.data["hotkeys"].get(context) or {}
         section[name] = []
         self.settings.data["hotkeys"][context] = section
+        _sync_record_bindings(self.settings, context, name, self._hotkey_buttons)
         self.settings.save()
         self.ctx.hotkeys.reload()
+        self.ctx.hotkeys._sync_bindings()
+        self._sync_record_buttons()
         self.ctx.refresh_hints()
         self.ctx.toast(tr("hotkey.reset"))
+
+    def _sync_record_buttons(self) -> None:
+        """Mirror the shared record binding into every record button."""
+        buttons = getattr(self, "_hotkey_buttons", {})
+        pairs = (("macros", "record"), ("global", "record"))
+        binding: list[int] = []
+        for context, name in pairs:
+            section = self.settings.data["hotkeys"].get(context) or {}
+            if section.get(name):
+                binding = list(section.get(name) or [])
+                break
+        for context, name in pairs:
+            button = (buttons.get(context) or {}).get(name)
+            if button is not None and button.binding() != binding:
+                button.set_binding(binding)
 
     def save(self, section: str, key: str, value) -> None:
         self.settings.data.setdefault(section, {})[key] = value
@@ -141,6 +173,21 @@ class BasePage(QWidget):
 
     def on_stats(self, mode: str, count: int, cps: float, elapsed: float) -> None:
         pass
+
+
+def _sync_record_bindings(settings, context: str, name: str, buttons) -> None:
+    """Keep the macro-record shortcut identical in "macros" and "global"."""
+    if name != "record" or context not in ("macros", "global"):
+        return
+    binding = list((settings.data["hotkeys"].get(context) or {}).get("record") or [])
+    for other in ("macros", "global"):
+        if other == context:
+            continue
+        section = settings.data["hotkeys"].setdefault(other, {})
+        section["record"] = list(binding)
+        button = (buttons.get(other) or {}).get("record")
+        if button is not None:
+            button.set_binding(list(binding))
 
 
 def hotkey_hint(settings, context: str = "mouse") -> str:
@@ -164,5 +211,10 @@ def hotkey_hint(settings, context: str = "mouse") -> str:
         hold = combo_label(section.get("hold"))
         if hold and settings["hotkeys"].get("hold_enabled", True):
             parts.append(f"{hold} — {tr('short.hold').lower()}")
+        global_record = combo_label(
+            (settings["hotkeys"].get("global") or {}).get("record")
+        )
+        if global_record:
+            parts.append(f"{global_record} — {tr('short.macro_record').lower()}")
 
     return "     ·     ".join(parts)

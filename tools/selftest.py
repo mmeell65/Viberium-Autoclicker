@@ -299,6 +299,102 @@ def main() -> None:
     hotkeys._handle_key(0x41, True, False, 0.0)
     check("capture normalizes modifiers", captured == [[0x11, 0x10, 0x41]], str(captured))
 
+    # ------------------------------------------------------- per-macro hotkeys
+    settings.data["hotkeys"]["macros"]["per_macro"] = {
+        "farm": {"play": [0x71]},          # F2
+        "quest": {"play": [0x72]},         # F3
+    }
+    settings.data["hotkeys"]["global"]["record"] = [0x73]  # F4
+    machine_events: list[tuple] = []
+    hotkeys.macro_action_triggered.connect(
+        lambda name, action: machine_events.append((name, action))
+    )
+    record_events: list[str] = []
+    hotkeys.record_triggered.connect(lambda: record_events.append("record"))
+    hotkeys.release_all()
+
+    # The Macros page is the context that owns macro shortcuts.
+    check("per-macro keys are global", hotkeys.context == "mouse")
+    hotkeys._handle_key(0x71, True, False, 0.0)
+    check(
+        "per-macro hotkey fires on any page",
+        machine_events == [("farm", "play")],
+        str(machine_events),
+    )
+    check("per-macro key suppressed for recorder", hotkeys.is_suppressed(0x71))
+    hotkeys._handle_key(0x71, False, False, 0.1)
+    hotkeys._handle_key(0x72, True, False, 0.2)
+    check(
+        "each macro has its own key",
+        machine_events == [("farm", "play"), ("quest", "play")],
+        str(machine_events),
+    )
+    hotkeys._handle_key(0x72, False, False, 0.3)
+
+    hotkeys.context = "keyboard"
+    hotkeys._handle_key(0x71, True, False, 0.4)
+    check(
+        "per-macro hotkey works on the keyboard page",
+        machine_events[-1] == ("farm", "play") and len(machine_events) == 3,
+        str(machine_events),
+    )
+    hotkeys._handle_key(0x71, False, False, 0.5)
+
+    hotkeys._handle_key(0x73, True, False, 0.0)
+    check("global record works off the macros page", record_events == ["record"], str(record_events))
+    hotkeys._handle_key(0x73, False, False, 0.1)
+    hotkeys.context = "macros"
+
+    per_bindings = [b for b in hotkeys.all_bindings() if b[0] == "macro"]
+    check(
+        "all_bindings lists per-macro keys",
+        sorted(name for _, name, _ in per_bindings) == ["farm#play", "quest#play"],
+        str(per_bindings),
+    )
+
+    # Config round-trip keeps per-macro bindings (and normalizes modifiers)
+    settings.data["hotkeys"]["macros"]["per_macro"]["farm"]["play"] = [0xA2, 0x71]
+    settings.save()
+    reloaded = Settings(directory=tmp)
+    check(
+        "config file stores per-macro keys",
+        json.loads((tmp / "config.json").read_text(encoding="utf-8"))["hotkeys"]["macros"]
+        ["per_macro"]["farm"]["play"] == [0xA2, 0x71],
+    )
+    check(
+        "per-macro hotkeys persisted",
+        reloaded["hotkeys"]["macros"]["per_macro"]["farm"]["play"] == [0x11, 0x71],
+        str(reloaded["hotkeys"]["macros"].get("per_macro")),
+    )
+    reloaded["hotkeys"]["macros"]["per_macro"] = {}
+    reloaded.save()
+    hotkeys.context = "mouse"
+    machine_events.clear()
+
+    # A version bump must keep the user's saved keys (only new defaults appear)
+    upgraded_dir = tmp / "upgrade"
+    upgraded_dir.mkdir()
+    (upgraded_dir / "config.json").write_text(
+        json.dumps(
+            {
+                "version": 3,
+                "hotkeys": {
+                    "mouse": {"toggle": [0x75], "hold": [], "emergency": [0x77]},
+                    "global": {"record": [0x73]},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    upgraded = Settings(directory=upgraded_dir)
+    check(
+        "config upgrade keeps hotkeys",
+        upgraded["hotkeys"]["mouse"]["toggle"] == [0x75]
+        and upgraded["hotkeys"]["global"]["record"] == [0x73]
+        and upgraded["hotkeys"]["macros"]["per_macro"] == {},
+        str(upgraded["hotkeys"]),
+    )
+
     # ----------------------------------------------------------------- macros
     calls.clear()
     macro = Macro(

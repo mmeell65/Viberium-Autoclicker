@@ -8,7 +8,7 @@ import time
 from ctypes import wintypes
 
 from ..i18n import tr
-from .vkeys import normalize_vk
+from .vkeys import MODIFIER_ALIASES, normalize_vk
 
 IS_WINDOWS = sys.platform == "win32"
 
@@ -132,6 +132,13 @@ def set_cursor_pos(x: int, y: int) -> None:
         user32.SetCursorPos(int(x), int(y))
 
 
+def foreground_hwnd() -> int:
+    """Handle of the window that currently has keyboard focus (0 if none)."""
+    if not IS_WINDOWS:
+        return 0
+    return int(user32.GetForegroundWindow() or 0)
+
+
 def get_foreground_window_title() -> str:
     """Возвращает заголовок активного окна (или пустую строку)."""
     if not IS_WINDOWS:
@@ -170,6 +177,42 @@ def get_open_windows() -> list[tuple[int, str]]:
 
 
 # ---------------------------------------------------------------- modifiers
+WATCH_VKS = frozenset(
+    {0x10, 0x11, 0x12, 0x5B, 0x5C, 0x05, 0x06, 0x20, 0x0D, 0x1B}
+    | set(range(0x30, 0x3A))
+    | set(range(0x41, 0x5B))
+    | set(range(0x60, 0x70))
+    | set(range(0x70, 0x88))
+)
+
+
+def any_held(vks) -> bool:
+    """True when at least one of the given virtual keys is physically down."""
+    if not IS_WINDOWS:
+        return False
+    return any(user32.GetAsyncKeyState(int(vk)) & 0x8000 for vk in vks)
+
+
+def combo_held(vks) -> bool:
+    """True when every key of the combination is physically down.
+
+    The left/right modifier variants are accepted as well, so a binding saved
+    as "Ctrl" also matches the left or right Ctrl key.
+    """
+    if not IS_WINDOWS:
+        return False
+    keys = [int(vk) for vk in vks or []]
+    if not keys:
+        return False
+    for vk in keys:
+        variants = {vk}
+        if vk in MODIFIER_ALIASES:
+            variants |= set(MODIFIER_ALIASES[vk])
+        if not any_held(variants):
+            return False
+    return True
+
+
 def held_modifiers() -> list[int]:
     """Modifier keys that are held down right now (left/right aware)."""
     if not IS_WINDOWS:

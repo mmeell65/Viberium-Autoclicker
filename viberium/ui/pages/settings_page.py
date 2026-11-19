@@ -51,6 +51,14 @@ class SettingsPage(BasePage):
         grid.addWidget(self._build_about_card(), 0, 1)
         grid.addWidget(QWidget(), 1, 1)  # empty spacer
         self.body.addLayout(grid)
+
+        card = self.hotkey_card(
+            "global",
+            [("record", "settings.hotkey.global_record", "settings.hotkey.global_record.hint")],
+            title=tr("card.global_hotkeys"),
+            icon_name="record",
+        )
+        self.body.addWidget(card)
         self.body.addStretch(1)
 
     # ------------------------------------------------------------------ cards

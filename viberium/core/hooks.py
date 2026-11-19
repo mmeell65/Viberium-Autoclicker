@@ -113,9 +113,14 @@ class _HookThread(threading.Thread):
         while user32.GetMessageW(ctypes.byref(message), None, 0, 0) > 0:
             user32.TranslateMessage(ctypes.byref(message))
             user32.DispatchMessageW(ctypes.byref(message))
-        if self._hook:
-            user32.UnhookWindowsHookEx(self._hook)
-            self._hook = None
+
+    def _unhook(self) -> None:
+        hook, self._hook = self._hook, None
+        if hook:
+            try:
+                user32.UnhookWindowsHookEx(hook)
+            except Exception:
+                pass
 
     def _dispatch(self, code, wparam, lparam):  # pragma: no cover - native callback
         if code >= 0:
@@ -127,9 +132,16 @@ class _HookThread(threading.Thread):
         return user32.CallNextHookEx(None, code, wparam, lparam)
 
     def stop(self) -> None:
+        # The hook is released from the owner thread right away: a hook that is
+        # still installed keeps the process alive after the window is gone.
+        self._unhook()
         if self._thread_id:
-            user32.PostThreadMessageW(self._thread_id, WM_QUIT, 0, 0)
-        self.join(timeout=1.0)
+            try:
+                user32.PostThreadMessageW(self._thread_id, WM_QUIT, 0, 0)
+            except Exception:
+                pass
+        if self.is_alive():
+            self.join(timeout=1.0)
 
 
 class InputHub:

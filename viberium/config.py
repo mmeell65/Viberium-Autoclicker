@@ -12,7 +12,7 @@ from typing import Any
 from .core.vkeys import normalize_vk
 
 APP_NAME = "Viberium"
-APP_VERSION = "1.1.1"
+APP_VERSION = "1.2.0"
 GITHUB_URL = "https://github.com/mmeell65/Viberium-Autoclicker"
 LICENSE_URL = f"{GITHUB_URL}/blob/main/LICENSE"
 TELEGRAM_URL = "https://t.me/viberium_autoclicker"
@@ -64,6 +64,10 @@ DEFAULTS: dict[str, Any] = {
         "macros": {             # горячие клавиши макросов
             "play": [],         # пусто — не назначено
             "record": [],       # пусто — не назначено
+            "per_macro": {},    # {"<макрос>": {"play": [], "record": []}}
+        },
+        "global": {             # работают на любой странице
+            "record": [],       # старт / стоп записи макроса
         },
         "hold_enabled": True,
         "block_keys": True,
@@ -77,8 +81,10 @@ DEFAULTS: dict[str, Any] = {
     "macro": {
         "speed": 1.0,
         "loops": 1,
+        "record_moves": False,  # записывать ли движение курсора
+        "hide_on_record": True, # сворачивать окно при старте записи
     },
-    "version": 3,  # 3 = emergency stop defaults to F8, others unassigned
+    "version": 4,  # 4 = per-macro hotkeys
 }
 
 
@@ -129,21 +135,28 @@ def _normalize_keyboard(section: dict) -> None:
 
 
 def _normalize_hotkeys(section: dict) -> None:
-    """Collapse left/right modifier codes in saved hotkey bindings."""
+    """Collapse left/right modifier codes in saved hotkey bindings.
+
+    Walks every nested level, so per-macro bindings
+    ({"macros": {"per_macro": {"<macro>": {"play": [...]}}}}) are covered too.
+    """
     if not isinstance(section, dict):
         return
-    for bindings in section.values():
-        if not isinstance(bindings, dict):
+    for name, value in list(section.items()):
+        if isinstance(value, dict):
+            _normalize_hotkeys(value)
             continue
-        for name, value in list(bindings.items()):
-            if not isinstance(value, (list, tuple)):
-                continue
-            normalized: list[int] = []
-            for item in value:
-                vk = normalize_vk(item)
-                if vk > 0 and vk not in normalized:
-                    normalized.append(vk)
-            bindings[name] = normalized
+        if not isinstance(value, (list, tuple)):
+            continue
+        if not all(isinstance(item, (int, str)) for item in value):
+            _normalize_hotkeys(value)
+            continue
+        normalized: list[int] = []
+        for item in value:
+            vk = normalize_vk(item)
+            if vk > 0 and vk not in normalized:
+                normalized.append(vk)
+        section[name] = normalized
 
 
 def _deep_merge(base: dict, patch: dict) -> dict:
@@ -187,13 +200,16 @@ class Settings:
         try:
             raw = json.loads(self.path.read_text(encoding="utf-8"))
             if isinstance(raw, dict):
-                if raw.get("version") != DEFAULTS["version"]:
-                    # Old config format: drop saved hotkeys so they start unassigned
-                    raw.pop("hotkeys", None)
+                outdated = raw.get("version") != DEFAULTS["version"]
+                if outdated:
+                    # Old config format: the version bump brings new defaults,
+                    # saved keys on known actions are kept as they are.
                     raw["version"] = DEFAULTS["version"]
                 _normalize_hotkeys(raw.get("hotkeys"))
                 _normalize_keyboard(raw.get("keyboard"))
                 self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
+                if outdated:
+                    self.save()
         except (OSError, ValueError):
             self.data = copy.deepcopy(DEFAULTS)
 

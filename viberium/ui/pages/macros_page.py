@@ -24,9 +24,13 @@ from .. import icons
 from ..theme import ACCENT, DIM, GREEN, RED
 from ..widgets import (
     Card,
+    HotkeyButton,
     NumberInput,
     SliderRow,
+    ToggleSwitch,
     divider,
+    form_row,
+    hint,
     icon_label,
     label,
     repolish,
@@ -39,9 +43,18 @@ class MacroRow(QWidget):
     play_requested = Signal(str)
     export_requested = Signal(str)
     delete_requested = Signal(str)
+    hotkey_changed = Signal(str, list)
 
-    def __init__(self, name: str, meta: str, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        meta: str,
+        manager=None,
+        binding: list[int] | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
+        self.name = name
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 8, 10, 8)
         layout.setSpacing(12)
@@ -55,6 +68,13 @@ class MacroRow(QWidget):
         texts.addWidget(name_label)
         texts.addWidget(label(meta, "Hint"))
         layout.addLayout(texts, 1)
+
+        # Per-macro start/stop shortcut: assigned here, in the library
+        self.hotkey_button = HotkeyButton(manager, binding)
+        self.hotkey_button.setMinimumWidth(150)
+        self.hotkey_button.setToolTip(tr("macros.hotkey.tooltip"))
+        self.hotkey_button.changed.connect(lambda keys: self.hotkey_changed.emit(name, list(keys)))
+        layout.addWidget(self.hotkey_button)
 
         for icon_name, color, slot, tooltip in (
             ("play", GREEN, self.play_requested, tr("btn.play")),
@@ -101,6 +121,7 @@ class MacrosPage(BasePage):
 
         self.ctx.recorder.finished.connect(self._on_recorded)
         self.ctx.recorder.tick.connect(self._on_record_tick)
+        self.ctx.recorder.state_changed.connect(self._set_recording)
         self.ctx.player.finished.connect(self._on_player_finished)
         self.refresh()
 
@@ -121,7 +142,45 @@ class MacrosPage(BasePage):
 
         self.record_meta = label("", "Mono")
         card.add(self.record_meta)
+
+        card.add(divider())
+        self.record_moves_toggle = ToggleSwitch(
+            bool(self.settings["macro"].get("record_moves", False))
+        )
+        self.record_moves_toggle.toggled.connect(
+            lambda value: self.save("macro", "record_moves", bool(value))
+        )
+        card.add(
+            form_row(
+                tr("macros.record_moves"),
+                self.record_moves_toggle,
+                tr("macros.record_moves.hint"),
+            )
+        )
+        self.hide_on_record_toggle = ToggleSwitch(
+            bool(self.settings["macro"].get("hide_on_record", True))
+        )
+        self.hide_on_record_toggle.toggled.connect(
+            lambda value: self.save("macro", "hide_on_record", bool(value))
+        )
+        card.add(
+            form_row(
+                tr("macros.hide_on_record"),
+                self.hide_on_record_toggle,
+                tr("macros.hide_on_record.hint"),
+            )
+        )
+        card.add(hint(self._hotkey_text()))
         return card
+
+    def _hotkey_text(self) -> str:
+        from ...core.winapi import combo_label
+
+        section = self.settings["hotkeys"].get("global") or {}
+        combo = combo_label(section.get("record"))
+        if not combo:
+            return tr("macros.hotkey_hint.none")
+        return tr("macros.hotkey_hint", hotkey=combo)
 
     def _build_playback_card(self) -> QWidget:
         card = Card(tr("card.playback"), tr("macros.playback_hint"), icon_name="play")
@@ -176,6 +235,7 @@ class MacrosPage(BasePage):
         import_button.clicked.connect(self._import_macro)
         row.addWidget(import_button)
         card.add(top)
+        card.add(hint(tr("macros.per_macro_hint")))
 
         self.empty_label = label(tr("macros.empty"), "Hint", wrap=True)
         self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -197,6 +257,7 @@ class MacrosPage(BasePage):
         self.empty_label.setVisible(not names)
         self.list.setVisible(bool(names))
         self.library_count.setText(f"{len(names)}" if names else "")
+        per_macro = (self.settings.data["hotkeys"].get("macros") or {}).get("per_macro") or {}
         for name in names:
             macro = self.ctx.macros.load(name)
             if macro is None:
@@ -205,25 +266,60 @@ class MacrosPage(BasePage):
                 f"{len(macro.events)} {tr('macros.actions')}  ·  "
                 f"{format_time(macro.duration)}"
             )
+            binding = list(((per_macro.get(name) or {}).get("play")) or [])
             item = QListWidgetItem()
             item.setSizeHint(QSize(0, 58))
             self.list.addItem(item)
-            row = MacroRow(name, meta)
+            row = MacroRow(name, meta, self.ctx.hotkeys, binding)
             row.play_requested.connect(self._play)
             row.export_requested.connect(self._export_macro)
             row.delete_requested.connect(self._delete_macro)
+            row.hotkey_changed.connect(self._on_macro_hotkey)
             self.list.setItemWidget(item, row)
         height = min(max(len(names), 1) * 62 + 4, 330)
         self.list.setFixedHeight(height if names else 0)
 
+    def _on_macro_hotkey(self, macro_name: str, binding: list[int]) -> None:
+        """Store the start/stop shortcut of one macro."""
+        binding = [int(vk) for vk in (binding or [])]
+        if binding:
+            for context, name, other in self.ctx.hotkeys.all_bindings():
+                if context == "macro" and name.startswith(f"{macro_name}#"):
+                    continue  # the same macro's own other action may share it
+                if list(other or []) == binding:
+                    self.ctx.toast(tr("hotkey.conflict"), "error")
+                    self.refresh()
+                    return
+        macros_section = self.settings.data["hotkeys"].setdefault("macros", {})
+        per_macro = macros_section.setdefault("per_macro", {})
+        actions = per_macro.setdefault(macro_name, {})
+        if binding:
+            actions["play"] = binding
+        else:
+            actions.pop("play", None)
+        if not actions:
+            per_macro.pop(macro_name, None)
+        self.settings.save()
+        self.ctx.hotkeys.reload()
+        self.ctx.refresh_hints()
+
     # --------------------------------------------------------------- recording
     def _toggle_record(self) -> None:
+        main = self.window()
+        handler = getattr(main, "_start_macro_record", None)
+        if handler is not None:
+            if self.ctx.recorder.active:
+                getattr(main, "_stop_macro_record", lambda *_: None)()
+            else:
+                handler(from_window=True)
+            return
+        # Fallback when the page is embedded without the main window
         if self.ctx.recorder.active:
             self.ctx.recorder.stop()
             return
         self.ctx.engine.stop(wait=True)
         self.ctx.player.stop()
-        self.ctx.recorder.start()
+        self.ctx.recorder.start(bool(self.settings["macro"].get("record_moves", False)))
         self._set_recording(True)
 
     def _set_recording(self, active: bool) -> None:
@@ -250,6 +346,13 @@ class MacrosPage(BasePage):
         if not macro.events:
             self.ctx.toast(tr("macros.empty"), "info")
             return
+        # Поднимаем окно к пользователю, чтобы сразу спросить название
+        main = self.window()
+        if not main.isVisible() or main.isMinimized():
+            main.showNormal()
+            main.raise_()
+            main.activateWindow()
+        self.ctx.refresh_hints()
         name, ok = QInputDialog.getText(
             self, tr("macros.record"), tr("macros.name_prompt"), text=macro.name
         )
@@ -271,6 +374,22 @@ class MacrosPage(BasePage):
         return f"{name} ({index})"
 
     # --------------------------------------------------------------- playback
+    def play_selected_or_last(self) -> None:
+        """Used by the play hotkey: plays the selected macro or the newest one."""
+        item = self.list.currentItem()
+        if item is not None:
+            row = self.list.itemWidget(item)
+            if row is not None:
+                self._play(row.name)
+                return
+        names = self.ctx.macros.names()
+        if names:
+            self._play(names[-1])
+
+    def play_macro(self, name: str) -> None:
+        """Play one concrete macro (used by its own hotkey)."""
+        self._play(name)
+
     def _on_speed(self, percent: int) -> None:
         self.save("macro", "speed", round(percent / 100.0, 2))
 
@@ -287,6 +406,10 @@ class MacrosPage(BasePage):
         if self.ctx.player.play(macro, speed, loops):
             self.playback_status.setText(f"{tr('status.playing')} · {name}")
             self.stop_button.setEnabled(True)
+            main = self.window()
+            notify = getattr(main, "notify", None)
+            if notify is not None:
+                notify(tr("notify.play_start"), name, "play", ACCENT, 1600)
 
     def _on_player_finished(self) -> None:
         self.playback_status.setText(tr("macros.idle"))
@@ -328,6 +451,11 @@ class MacrosPage(BasePage):
         )
         if answer == QMessageBox.StandardButton.Yes:
             self.ctx.macros.delete(name)
+            # Forget the deleted macro's own shortcut
+            per_macro = (self.settings.data["hotkeys"].get("macros") or {}).get("per_macro") or {}
+            if per_macro.pop(name, None):
+                self.settings.save()
+                self.ctx.hotkeys.reload()
             self.refresh()
 
     def cleanup(self) -> None:

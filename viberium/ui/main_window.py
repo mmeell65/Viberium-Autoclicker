@@ -27,7 +27,7 @@ from ..core.engine import ClickEngine
 from ..core.hooks import InputHub
 from ..core.hotkeys import HotkeyManager
 from ..core.macros import MacroPlayer, MacroRecorder, MacroStore
-from ..core import winapi
+from ..core import notifications, winapi
 from ..i18n import tr
 from . import icons
 from .appicon import app_icon, icon_pixmap
@@ -36,7 +36,7 @@ from .pages.keyboard_page import KeyboardPage
 from .pages.macros_page import MacrosPage
 from .pages.mouse_page import MousePage
 from .pages.settings_page import SettingsPage
-from .theme import ACCENT, add_shadow, remove_shadow
+from .theme import ACCENT, RED, add_shadow, remove_shadow
 from .widgets import NavButton, TitleBar, Toast, label, repolish
 
 NAV_ITEMS = (
@@ -60,6 +60,7 @@ class MainWindow(QWidget):
         self.hotkeys = HotkeyManager(self.settings, self.hub, self)
         self.macros = MacroStore()
         self.recorder = MacroRecorder(self.hub, self)
+        self.recorder.skip_key = self.hotkeys.is_suppressed
         self.player = MacroPlayer(self)
 
         self.ctx = Context(
@@ -82,6 +83,7 @@ class MainWindow(QWidget):
         self._toast: Toast | None = None
         self._hold_owns_engine = False
         self._force_quit = False
+        self._shutting_down = False
         self._tray_hint_shown = False
         self._tray: QSystemTrayIcon | None = None
 
@@ -293,6 +295,11 @@ class MainWindow(QWidget):
         if self._toast is not None:
             self._toast.show_message(text, kind)
 
+    def notify(self, title: str, detail: str = "", icon_name: str = "info",
+               color: str = "", duration: int = 2200) -> None:
+        """On-screen notification that stays visible outside the main window."""
+        notifications.notify(title, detail, icon_name, color, duration)
+
     # ----------------------------------------------------------------- engine
     def _connect_engine(self) -> None:
         self.engine.state_changed.connect(self._on_engine_state)
@@ -303,6 +310,48 @@ class MainWindow(QWidget):
         self.hotkeys.hold_ended.connect(self._on_hold_end)
         self.hotkeys.emergency_triggered.connect(self.emergency_stop)
         self.hotkeys.macro_record_triggered.connect(self._toggle_macro_record)
+        self.hotkeys.record_triggered.connect(self._toggle_macro_record)
+        self.hotkeys.play_triggered.connect(self._toggle_macro_play)
+        self.hotkeys.macro_action_triggered.connect(self._on_macro_action)
+        self.recorder.state_changed.connect(self._on_recorder_state)
+
+    def _on_macro_action(self, macro_name: str, action: str) -> None:
+        """Per-macro hotkey: start/stop one specific macro."""
+        page = self._pages[2] if len(self._pages) > 2 else None
+        if action == "record":
+            if self.ctx.recorder.active:
+                self._stop_macro_record("hotkey")
+            else:
+                self._start_macro_record(from_window=False)
+            return
+        if action != "play":
+            return
+        # The same shortcut starts and stops its macro: while a macro is
+        # playing the shortcut stops it, otherwise it plays its own macro.
+        if self.ctx.player.playing:
+            self.ctx.player.stop()
+            return
+        if page is not None and hasattr(page, "play_macro"):
+            page.play_macro(macro_name)
+
+    def _toggle_macro_play(self) -> None:
+        """Macro play/stop hotkey: stops playing or plays the selected macro."""
+        if self.ctx.player.playing:
+            self.ctx.player.stop()
+            return
+        page = self._pages[2] if len(self._pages) > 2 else None
+        if page is not None and hasattr(page, "play_selected_or_last"):
+            page.play_selected_or_last()
+
+    def _on_recorder_state(self, active: bool) -> None:
+        """Screen notification for every recording start/stop, no matter how
+        it was triggered (button, hotkey or emergency stop)."""
+        if active:
+            self.notify(
+                tr("notify.record_start"), tr("notify.record_start.hint"), "record", RED, 2200
+            )
+        elif not getattr(self, "_shutting_down", False):
+            self.notify(tr("notify.record_stop"), tr("notify.record_stop.hint"), "stop", "", 1800)
 
     # ----------------------------------------------------------------- engine
     def _start_target(self) -> bool:
@@ -322,11 +371,29 @@ class MainWindow(QWidget):
 
     def _toggle_macro_record(self) -> None:
         if self.ctx.recorder.active:
-            self.ctx.recorder.stop()
+            self._stop_macro_record("hotkey")
         else:
-            self.ctx.engine.stop(wait=True)
-            self.ctx.player.stop()
-            self.ctx.recorder.start()
+            self._start_macro_record(from_window=False)
+
+    def _start_macro_record(self, from_window: bool = True) -> None:
+        if self.ctx.recorder.active:
+            return
+        self.ctx.engine.stop(wait=True)
+        self.ctx.player.stop(wait=True)
+        record_moves = bool(self.settings["macro"].get("record_moves", False))
+        self.ctx.recorder.start(record_moves)
+        if from_window and self.settings["macro"].get("hide_on_record", True):
+            self.showMinimized()
+
+    def _stop_macro_record(self, source: str = "button") -> None:
+        if not self.ctx.recorder.active:
+            return
+        self.ctx.recorder.stop()
+
+    def _handle_global_hotkey(self, name: str) -> None:
+        """Bindings from the "global" section work on every page."""
+        if name == "record":
+            self._toggle_macro_record()
 
     def _on_hold_start(self) -> None:
         if not self.engine.is_running():
@@ -538,12 +605,54 @@ class MainWindow(QWidget):
         QApplication.quit()
 
     def shutdown(self) -> None:
-        try:
-            self.engine.stop(wait=True)
-            self.player.stop()
-            if self.recorder.active:
-                self.recorder.stop()
-            self.hub.stop()
-        finally:
-            if self._tray is not None:
+        """Stop every worker and hook exactly once, then leave the process clean.
+
+        Closing the window used to leave a copy alive in Task Manager when a
+        background worker (macro playback, a held hotkey loop) kept running;
+        repeated starts then piled up several processes.
+        """
+        if self._shutting_down:
+            return
+        self._shutting_down = True
+        for step in (
+            lambda: self._target_status_timer.stop(),
+            lambda: self.engine.stop(wait=True),
+            lambda: self.player.stop(wait=True),
+            lambda: self.recorder.stop() if self.recorder.active else None,
+            notifications.shutdown,
+            self.hub.stop,
+        ):
+            try:
+                step()
+            except Exception:
+                pass
+        if self._tray is not None:
+            try:
                 self._tray.hide()
+            except Exception:
+                pass
+            self._tray = None
+        if self._toast is not None:
+            self._toast.hide()
+
+    def closeEvent(self, event) -> None:
+        to_tray = bool(self.settings["general"].get("minimize_to_tray", True))
+        if (
+            to_tray
+            and self._tray is not None
+            and self._tray.isVisible()
+            and not self._force_quit
+        ):
+            event.ignore()
+            self.hide()
+            if not self._tray_hint_shown:
+                self._tray_hint_shown = True
+                self._tray.showMessage(
+                    "Viberium",
+                    tr("tray.idle"),
+                    QSystemTrayIcon.MessageIcon.Information,
+                    2500,
+                )
+            return
+        self.shutdown()
+        super().closeEvent(event)

@@ -33,6 +33,10 @@ def main() -> int:
 
     window = MainWindow()
 
+    # Whatever closes the app (window, tray "Exit", logout), every hook and
+    # worker thread must be released, or the process lingers in Task Manager.
+    app.aboutToQuit.connect(window.shutdown)
+
     minimized = "--minimized" in sys.argv or (
         settings["general"].get("start_minimized", False) and window._tray is not None
     )
@@ -41,7 +45,9 @@ def main() -> int:
     else:
         window.show()
 
-    return app.exec()
+    code = app.exec()
+    window.shutdown()
+    return code
 
 
 if __name__ == "__main__":
