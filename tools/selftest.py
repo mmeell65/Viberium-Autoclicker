@@ -435,13 +435,22 @@ def main() -> None:
     again.set("mouse", "interval_ms", 999)
     check("profile loaded", again.load_profile("Профиль 1") and again.get("mouse", "interval_ms") == 250)
     # A profile must never carry the target process
-    again.set("mouse", "target_process", "Some Window")
+    again.set("hotkeys", "target_process", "Some Window")
     again.save_profile("Профиль 2")
     profile_data = json.loads((tmp / "profiles" / "Профиль 2.json").read_text(encoding="utf-8"))
-    check("profile has no target_process", "target_process" not in profile_data.get("mouse", {}))
-    again.set("mouse", "target_process", "Current Window")
+    check(
+        "profile has no target_process",
+        "target_process" not in profile_data.get("hotkeys", {})
+        and "target_process" not in profile_data.get("mouse", {}),
+        str(profile_data.get("hotkeys", {}).get("target_process")),
+    )
+    again.set("hotkeys", "target_process", "Current Window")
     again.load_profile("Профиль 2")
-    check("profile keeps current process", again.get("mouse", "target_process") == "Current Window")
+    check(
+        "profile keeps current process",
+        again.get("hotkeys", "target_process") == "Current Window",
+        str(again.get("hotkeys", "target_process")),
+    )
     again.delete_profile("Профиль 2")
     again.delete_profile("Профиль 1")
     check("profile deleted", again.profile_names() == [])
@@ -469,6 +478,47 @@ def main() -> None:
         migrated["hotkeys"]["mouse"]["toggle"] == [0x11, 0x41],
         str(migrated["hotkeys"]["mouse"]["toggle"]),
     )
+
+    target_dir = tmp / "target"
+    target_dir.mkdir()
+    (target_dir / "config.json").write_text(
+        json.dumps(
+            {
+                "version": 4,
+                "mouse": {"target_process": "Minecraft 1.7.10"},
+                "keyboard": {"target_process": "Minecraft 1.7.10"},
+                "hotkeys": {"mouse": {"toggle": []}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    moved = Settings(directory=target_dir)
+    check(
+        "old per-page target merges into one",
+        moved["hotkeys"]["target_process"] == "Minecraft 1.7.10",
+        str(moved["hotkeys"].get("target_process")),
+    )
+    check(
+        "old per-page target keys removed",
+        "target_process" not in moved["mouse"] and "target_process" not in moved["keyboard"],
+    )
+    from viberium.core.engine import (
+        current_target_process,
+        set_target_process,
+        target_process_of,
+        window_title_matches,
+    )
+
+    set_target_process("Minecraft")
+    check("engine keeps current target", current_target_process() == "Minecraft")
+    check("target read from hotkeys", target_process_of({"hotkeys": {"target_process": "X"}}) == "X")
+    check(
+        "target window matching",
+        window_title_matches("minecraft", "Minecraft 1.7.10")
+        and window_title_matches("", "anything")
+        and not window_title_matches("Chrome", "Minecraft 1.7.10"),
+    )
+    check("target resets to empty", target_process_of(Settings(directory=target_dir)) != "")
 
     # -------------------------------------------------------------------- i18n
     tr.set_language("ru")

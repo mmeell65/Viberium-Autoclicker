@@ -29,14 +29,15 @@
 
 ---
 
-## What's new in 1.2.0
+## What's new in 1.2.1
 
-- **A hotkey per macro**: assign it right in the macro's row; it runs that macro and stops it when pressed again.
-- **Macro hotkeys work everywhere**: on any page of the app, in other windows and while Viberium is minimized to the tray.
-- **Fixed lingering in Task Manager**: on exit the app releases its input hooks and finishes all threads, so no extra processes stay behind.
-- **Settings survive updates** from older versions.
+- **One target window for the whole app**: the picked process applies to every tab at once — mouse, keyboard and macros.
+- **The picked window resets on exit**: the next launch starts without a target.
+- **Macros wait for the target window** and send nothing while it is not active.
+- **Fixed lingering in Task Manager**: closing the window now ends the process completely.
+- **Builds no longer mix versions**: files from older builds never end up in a new one.
 
-[Full changelog](CHANGELOG.md) · [Download 1.2.0](../../releases/latest)
+[Full changelog](CHANGELOG.md) · [Download 1.2.1](../../releases/latest)
 
 ## Windows auto clicker
 

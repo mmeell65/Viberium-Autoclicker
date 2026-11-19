@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import gc
 from ctypes import wintypes
 
 from PySide6.QtCore import QEvent, QPoint, QTimer, Qt
@@ -23,11 +24,11 @@ from PySide6.QtWidgets import (
 )
 
 from ..config import APP_VERSION, Settings
+from ..core import engine, winapi
 from ..core.engine import ClickEngine
 from ..core.hooks import InputHub
 from ..core.hotkeys import HotkeyManager
 from ..core.macros import MacroPlayer, MacroRecorder, MacroStore
-from ..core import winapi
 from ..i18n import tr
 from . import icons
 from .appicon import app_icon, icon_pixmap
@@ -102,6 +103,7 @@ class MainWindow(QWidget):
         self._connect_engine()
         self._create_tray()
         self.apply_flags()
+        engine.sync_target_process(self.settings)
 
     # ------------------------------------------------------------------ build
     def _build_ui(self) -> None:
@@ -157,6 +159,9 @@ class MainWindow(QWidget):
         self.clear_target_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.clear_target_button.clicked.connect(self._clear_target)
         buttons_layout.addWidget(self.clear_target_button)
+
+        self.pick_target_button.setToolTip(tr("target.process.hint"))
+        self.clear_target_button.setToolTip(tr("target.process.hint"))
 
         buttons_layout.addStretch(1)
         target_controls_layout.addWidget(buttons)
@@ -458,34 +463,25 @@ class MainWindow(QWidget):
         menu.exec(self.pick_target_button.mapToGlobal(self.pick_target_button.rect().bottomLeft()))
 
     def _set_target(self, title: str) -> None:
-        page_contexts = ("mouse", "keyboard", "macros", "mouse")
-        active_ctx = page_contexts[self._page_index] if hasattr(self, "_page_index") else "mouse"
-        if active_ctx in ("mouse", "keyboard"):
-            section = self.settings.data.get(active_ctx, {})
-            section["target_process"] = title
-            self.settings.data[active_ctx] = section
-            self.settings.save()
+        """Одно целевое окно на всё приложение: мышь, клавиатура и макросы."""
+        self.settings.data.setdefault("hotkeys", {})["target_process"] = title
+        self.settings.save()
+        engine.set_target_process(title)
         self.ctx.toast(tr("target.process.active", title=title))
         self._update_target_status()
 
-    def _clear_target(self) -> None:
-        page_contexts = ("mouse", "keyboard", "macros", "mouse")
-        active_ctx = page_contexts[self._page_index] if hasattr(self, "_page_index") else "mouse"
-        if active_ctx in ("mouse", "keyboard"):
-            section = self.settings.data.get(active_ctx, {})
-            section["target_process"] = ""
-            self.settings.data[active_ctx] = section
-            self.settings.save()
-        self.ctx.toast(tr("target.process.cleared"))
+    def _clear_target(self, notify: bool = True) -> None:
+        self.settings.data.setdefault("hotkeys", {})["target_process"] = ""
+        self.settings.save()
+        engine.set_target_process("")
+        if notify:
+            self.ctx.toast(tr("target.process.cleared"))
         self._update_target_status()
 
     def _update_target_status(self) -> None:
-        page_contexts = ("mouse", "keyboard", "macros", "mouse")
-        active_ctx = page_contexts[self._page_index] if hasattr(self, "_page_index") else "mouse"
-        target = ""
-        if active_ctx in ("mouse", "keyboard"):
-            section = self.settings.data.get(active_ctx, {})
-            target = section.get("target_process", "") or ""
+        target = self.settings.data.get("hotkeys", {}).get("target_process", "") or ""
+        if target != engine.current_target_process():
+            engine.set_target_process(target)
 
         if not target:
             self.process_label.setText(tr("target.process.status.not_selected"))
@@ -601,12 +597,24 @@ class MainWindow(QWidget):
             return
         self.shutdown()
         super().closeEvent(event)
+        self._release_ui()
+        # Окно закрыто окончательно: останавливаем цикл событий, чтобы
+        # процесс завершился, а не остался в памяти без окон.
+        QTimer.singleShot(0, QApplication.quit)
 
     def quit_app(self) -> None:
         self._force_quit = True
         self.shutdown()
         self.close()
+        self._release_ui()
         QApplication.quit()
+
+    def _release_ui(self) -> None:
+        """Дожидаемся сборки мусора до выхода, пока Qt ещё полностью жив."""
+        try:
+            gc.collect()
+        except Exception:
+            pass
 
     def shutdown(self) -> None:
         """Stop every worker and hook exactly once, then leave the process clean.
@@ -618,6 +626,12 @@ class MainWindow(QWidget):
         if self._shutting_down:
             return
         self._shutting_down = True
+        # Выбранное окно сбрасывается при закрытии: следующий запуск
+        # начинается без таргета.
+        try:
+            self._clear_target(notify=False)
+        except Exception:
+            pass
         for step in (
             lambda: self._target_status_timer.stop(),
             lambda: self.engine.stop(wait=True),

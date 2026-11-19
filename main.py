@@ -47,6 +47,7 @@ def main() -> int:
 
     code = app.exec()
     window.shutdown()
+    window._release_ui()
     return code
 
 

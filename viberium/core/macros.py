@@ -13,6 +13,7 @@ from PySide6.QtCore import QObject, Signal
 
 from ..config import appdata_dir
 from . import winapi
+from .engine import current_target_process, window_title_matches
 from .hooks import InputHub
 
 BUTTON_BY_KIND = {
@@ -266,6 +267,17 @@ class MacroPlayer(QObject):
                             break
                         if self._stop.wait(min(remaining, 0.02)):
                             return
+                    # Одно целевое окно для всех вкладок: макрос тоже ждёт,
+                    # пока не станет активно выбранное окно.
+                    if not self._target_window_ready():
+                        if self._stop.wait(0.05):
+                            return
+                        current = target
+                        while not self._target_window_ready():
+                            if self._stop.wait(0.05):
+                                return
+                        start += time.perf_counter() - current
+                        continue
                     self._apply(event)
                     self.progress.emit(min(float(event.get("t", 0.0)) / total, 1.0))
         except Exception:
@@ -274,6 +286,13 @@ class MacroPlayer(QObject):
             self._release()
             self._thread = None
             self.finished.emit()
+
+    @staticmethod
+    def _target_window_ready() -> bool:
+        target = current_target_process()
+        if not target:
+            return True
+        return window_title_matches(target, winapi.get_foreground_window_title())
 
     @staticmethod
     def _apply(event: dict) -> None:

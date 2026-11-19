@@ -57,6 +57,44 @@ def precise_sleep(seconds: float, stop: threading.Event) -> bool:
             time.sleep(0)
 
 
+def target_process_of(settings) -> str:
+    """Одно целевое окно для всех вкладок ("" — работать в любом окне)."""
+    try:
+        return str((settings["hotkeys"] or {}).get("target_process") or "")
+    except Exception:
+        return ""
+
+
+def window_title_matches(target: str, title: str) -> bool:
+    """True, если заголовок окна подходит под выбранный процесс (вхождение)."""
+    target = (target or "").strip().lower()
+    if not target:
+        return True
+    return target in (title or "").lower()
+
+
+_TARGET_LOCK = threading.Lock()
+_TARGET_PROCESS = ""
+
+
+def set_target_process(value: str) -> None:
+    """Задаёт общее целевое окно и сохраняет его в настройках."""
+    global _TARGET_PROCESS
+    with _TARGET_LOCK:
+        _TARGET_PROCESS = str(value or "").strip()
+
+
+def current_target_process() -> str:
+    with _TARGET_LOCK:
+        return _TARGET_PROCESS
+
+
+def sync_target_process(settings) -> str:
+    """Читает сохранённый таргет и запоминает его для рабочих потоков."""
+    set_target_process(target_process_of(settings))
+    return current_target_process()
+
+
 class ClickEngine(QObject):
     """Runs one worker at a time (mouse or keyboard)."""
 
@@ -127,8 +165,7 @@ class ClickEngine(QObject):
         if not IS_WINDOWS:
             return True
         try:
-            title = winapi.get_foreground_window_title()
-            return target.lower() in title.lower()
+            return window_title_matches(target, winapi.get_foreground_window_title())
         except Exception:
             return False
 
@@ -153,7 +190,7 @@ class ClickEngine(QObject):
         limit_seconds = max(int(cfg.get("limit_seconds", 0)), 0)
         stop_on_move = bool(cfg.get("stop_on_move", False))
         delay = max(int(cfg.get("start_delay_ms", 0)), 0) / 1000.0
-        target_process = cfg.get("target_process", "") or ""
+        target_process = current_target_process()
         ignore_modifiers = bool(cfg.get("ignore_modifiers", False))
 
         if delay and not precise_sleep(delay, stop):
@@ -259,7 +296,7 @@ class ClickEngine(QObject):
         limit_presses = max(int(cfg.get("limit_presses", 0)), 0)
         limit_seconds = max(int(cfg.get("limit_seconds", 0)), 0)
         delay = max(int(cfg.get("start_delay_ms", 0)), 0) / 1000.0
-        target_process = cfg.get("target_process", "") or ""
+        target_process = current_target_process()
 
         if delay and not precise_sleep(delay, stop):
             return "stopped"

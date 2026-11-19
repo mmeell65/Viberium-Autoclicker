@@ -12,7 +12,7 @@ from typing import Any
 from .core.vkeys import normalize_vk
 
 APP_NAME = "Viberium"
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.2.1"
 GITHUB_URL = "https://github.com/mmeell65/Viberium-Autoclicker"
 LICENSE_URL = f"{GITHUB_URL}/blob/main/LICENSE"
 TELEGRAM_URL = "https://t.me/viberium_autoclicker"
@@ -34,7 +34,6 @@ DEFAULTS: dict[str, Any] = {
         "limit_seconds": 0,        # 0 = unlimited
         "stop_on_move": False,
         "start_delay_ms": 0,
-        "target_process": "",      # пусто — работает во всех окнах
         "ignore_modifiers": False, # отпускать Shift/Ctrl/Alt на время клика
     },
     "keyboard": {
@@ -48,7 +47,6 @@ DEFAULTS: dict[str, Any] = {
         "limit_presses": 0,
         "limit_seconds": 0,
         "start_delay_ms": 0,
-        "target_process": "",      # пусто — работает во всех окнах
     },
     "hotkeys": {
         "mouse": {              # горячие клавиши автокликера мыши
@@ -71,6 +69,10 @@ DEFAULTS: dict[str, Any] = {
         },
         "hold_enabled": True,
         "block_keys": True,
+        # Одно целевое окно для всех вкладок (мышь, клавиатура, макросы).
+        # Пусто — кликер работает в любом окне. При закрытии приложения
+        # сбрасывается (см. MainWindow._clear_target).
+        "target_process": "",
     },
     "general": {
         "minimize_to_tray": True,
@@ -84,7 +86,7 @@ DEFAULTS: dict[str, Any] = {
         "record_moves": False,  # записывать ли движение курсора
         "hide_on_record": True, # сворачивать окно при старте записи
     },
-    "version": 4,  # 4 = per-macro hotkeys
+    "version": 5,  # 5 = одно целевое окно для всех вкладок
 }
 
 
@@ -159,6 +161,24 @@ def _normalize_hotkeys(section: dict) -> None:
         section[name] = normalized
 
 
+def _migrate_target(raw: dict) -> None:
+    """Переносит старое раздельное окно (mouse/keyboard) в общий ключ."""
+    hotkeys = raw.get("hotkeys")
+    if not isinstance(hotkeys, dict):
+        hotkeys = {}
+        raw["hotkeys"] = hotkeys
+    if not hotkeys.get("target_process"):
+        for section in ("mouse", "keyboard"):
+            value = (raw.get(section) or {}).get("target_process") if isinstance(raw.get(section), dict) else None
+            if value:
+                hotkeys["target_process"] = value
+                break
+    # Старые раздельные ключи больше не используются
+    for section in ("mouse", "keyboard"):
+        if isinstance(raw.get(section), dict):
+            raw[section].pop("target_process", None)
+
+
 def _deep_merge(base: dict, patch: dict) -> dict:
     for key, value in patch.items():
         if key in base and isinstance(base[key], dict) and isinstance(value, dict):
@@ -207,6 +227,7 @@ class Settings:
                     raw["version"] = DEFAULTS["version"]
                 _normalize_hotkeys(raw.get("hotkeys"))
                 _normalize_keyboard(raw.get("keyboard"))
+                _migrate_target(raw)
                 self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
                 if outdated:
                     self.save()
@@ -241,9 +262,8 @@ class Settings:
         self.profiles_dir.mkdir(parents=True, exist_ok=True)
         # The target process is always picked manually — never stored in a profile
         snapshot = copy.deepcopy(self.data)
-        for section in ("mouse", "keyboard"):
-            if isinstance(snapshot.get(section), dict):
-                snapshot[section].pop("target_process", None)
+        if isinstance(snapshot.get("hotkeys"), dict):
+            snapshot["hotkeys"].pop("target_process", None)
         payload = json.dumps(snapshot, ensure_ascii=False, indent=2)
         (self.profiles_dir / f"{safe}.json").write_text(payload, encoding="utf-8")
 
@@ -257,10 +277,9 @@ class Settings:
             return False
         language = self.data.get("language", "ru")
         # Keep the currently selected process — a profile never changes it
-        current_targets = {
-            section: self.data.get(section, {}).get("target_process", "")
-            for section in ("mouse", "keyboard")
-        }
+        current_target = (self.data.get("hotkeys") or {}).get("target_process", "")
+        if isinstance(raw.get("hotkeys"), dict):
+            raw["hotkeys"].pop("target_process", None)
         for section in ("mouse", "keyboard"):
             if isinstance(raw.get(section), dict):
                 raw[section].pop("target_process", None)
@@ -268,8 +287,7 @@ class Settings:
         _normalize_keyboard(raw.get("keyboard"))
         self.data = _deep_merge(copy.deepcopy(DEFAULTS), raw)
         self.data["language"] = language
-        for section, value in current_targets.items():
-            self.data.setdefault(section, {})["target_process"] = value
+        self.data.setdefault("hotkeys", {})["target_process"] = current_target
         self.save()
         return True
 

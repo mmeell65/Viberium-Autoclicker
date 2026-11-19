@@ -73,6 +73,7 @@ RU: dict[str, str] = {
     "target.process.status.not_selected": "Процесс: не выбрано (будет работать везде)",
     "target.process.cleared": "Целевое окно сброшено",
     "target.process.no_windows": "Нет открытых окон",
+    "target.process.hint": "Одно окно для всех вкладок: мышь, клавиатура и макросы. Сбрасывается при закрытии программы.",
     # keyboard page
     "keyboard.title": "Автокликер клавиатуры",
     "keyboard.subtitle": "Автоматическое нажатие клавиш и сочетаний",
@@ -253,6 +254,7 @@ EN: dict[str, str] = {
     "target.process.status.not_selected": "Process: not selected (will work everywhere)",
     "target.process.cleared": "Target window cleared",
     "target.process.no_windows": "No open windows",
+    "target.process.hint": "One window for every tab: mouse, keyboard and macros. Reset when the app closes.",
     "keyboard.title": "Keyboard auto clicker",
     "keyboard.subtitle": "Automatic pressing of keys and combinations",
     "card.key": "Key",
