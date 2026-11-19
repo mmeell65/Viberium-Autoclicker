@@ -27,7 +27,7 @@ from ..core.engine import ClickEngine
 from ..core.hooks import InputHub
 from ..core.hotkeys import HotkeyManager
 from ..core.macros import MacroPlayer, MacroRecorder, MacroStore
-from ..core import notifications, winapi
+from ..core import winapi
 from ..i18n import tr
 from . import icons
 from .appicon import app_icon, icon_pixmap
@@ -297,8 +297,12 @@ class MainWindow(QWidget):
 
     def notify(self, title: str, detail: str = "", icon_name: str = "info",
                color: str = "", duration: int = 2200) -> None:
-        """On-screen notification that stays visible outside the main window."""
-        notifications.notify(title, detail, icon_name, color, duration)
+        """Feedback that stays visible when the window is hidden to the tray."""
+        text = f"{title} — {detail}" if detail else title
+        self.toast(text, "info")
+        if self._tray is not None and not self.isVisible():
+            kind = QSystemTrayIcon.MessageIcon.Warning if color else QSystemTrayIcon.MessageIcon.Information
+            self._tray.showMessage(title, detail or title, kind, max(1000, duration))
 
     # ----------------------------------------------------------------- engine
     def _connect_engine(self) -> None:
@@ -619,7 +623,6 @@ class MainWindow(QWidget):
             lambda: self.engine.stop(wait=True),
             lambda: self.player.stop(wait=True),
             lambda: self.recorder.stop() if self.recorder.active else None,
-            notifications.shutdown,
             self.hub.stop,
         ):
             try:
@@ -634,25 +637,3 @@ class MainWindow(QWidget):
             self._tray = None
         if self._toast is not None:
             self._toast.hide()
-
-    def closeEvent(self, event) -> None:
-        to_tray = bool(self.settings["general"].get("minimize_to_tray", True))
-        if (
-            to_tray
-            and self._tray is not None
-            and self._tray.isVisible()
-            and not self._force_quit
-        ):
-            event.ignore()
-            self.hide()
-            if not self._tray_hint_shown:
-                self._tray_hint_shown = True
-                self._tray.showMessage(
-                    "Viberium",
-                    tr("tray.idle"),
-                    QSystemTrayIcon.MessageIcon.Information,
-                    2500,
-                )
-            return
-        self.shutdown()
-        super().closeEvent(event)
